@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ProductStatus {
     ACTIVE((short) 1),
-    INACTIVE((short) 2);
+    BLOCKED((short) 2);
 
     @JsonValue
     public final short id;

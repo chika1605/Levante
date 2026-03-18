@@ -16,6 +16,6 @@ public class OrderResponse {
     private LocalDateTime orderedDate;
     private Double totalAmount;
     private Integer totalQuantity;
-    @Schema(type = "integer", example = "1", description = "1=PENDING, 2=CONFIRMED, 3=CANCELLED")
+    @Schema(type = "integer", example = "1", description = "1=PENDING, 2=PAID, 3=CANCELLED")
     private OrderStatus status;
 }

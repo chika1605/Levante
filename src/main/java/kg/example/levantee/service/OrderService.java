@@ -43,6 +43,13 @@ public class OrderService {
         for (OrderItemRequest itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
                     .orElseThrow(() -> new NotFoundException("Продукт не найден"));
+
+            if (product.getStock() < itemRequest.getQuantity()) {
+                throw new IllegalArgumentException("Недостаточно товара на складе: " + product.getName());
+            }
+
+            product.setStock(product.getStock() - itemRequest.getQuantity());
+
             OrderItem item = orderMapper.toItem(order, product, itemRequest.getQuantity());
             items.add(item);
             totalAmount += item.getTotalPrice();
