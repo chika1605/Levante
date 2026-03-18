@@ -11,13 +11,15 @@ import kg.example.levantee.model.entity.User;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class OrderMapper {
 
     public Order toEntity(User user, OrderRequest request, List<OrderItem> items, double totalAmount, int totalQuantity) {
+        String orderCode = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         return Order.builder()
-                .orderCode(request.getOrderCode())
+                .orderCode(orderCode)
                 .user(user)
                 .items(items)
                 .totalAmount(totalAmount)

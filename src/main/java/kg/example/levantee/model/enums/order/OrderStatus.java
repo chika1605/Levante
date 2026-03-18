@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum OrderStatus {
-    PENDING(1),
-    CONFIRMED(2),
-    CANCELLED(3);
+    PENDING((short) 1),
+    CONFIRMED((short) 2),
+    CANCELLED((short) 3);
 
     @JsonValue
-    public final int id;
+    public final short id;
 
-    OrderStatus(int id) {
+    OrderStatus(short id) {
         this.id = id;
     }
 
