@@ -9,5 +9,5 @@ public class OrderItemResponse {
     private String productName;
     private Double unitPrice;
     private Integer quantity;
-    private Double price;
+    private Double totalPrice;
 }

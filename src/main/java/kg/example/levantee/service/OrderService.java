@@ -45,7 +45,7 @@ public class OrderService {
                     .orElseThrow(() -> new NotFoundException("Продукт не найден"));
             OrderItem item = orderMapper.toItem(order, product, itemRequest.getQuantity());
             items.add(item);
-            totalAmount += item.getPrice();
+            totalAmount += item.getTotalPrice();
             totalQuantity += item.getQuantity();
         }
 

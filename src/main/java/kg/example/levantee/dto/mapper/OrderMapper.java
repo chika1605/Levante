@@ -28,13 +28,13 @@ public class OrderMapper {
     }
 
     public OrderItem toItem(Order order, Product product, int quantity) {
-        double price = product.getPrice() * quantity;
+        double totalPrice = product.getPrice() * quantity;
         return OrderItem.builder()
                 .order(order)
                 .product(product)
                 .unitPrice(product.getPrice())
                 .quantity(quantity)
-                .price(price)
+                .totalPrice(totalPrice)
                 .build();
     }
 
@@ -45,7 +45,7 @@ public class OrderMapper {
         response.setProductName(item.getProduct().getName());
         response.setUnitPrice(item.getUnitPrice());
         response.setQuantity(item.getQuantity());
-        response.setPrice(item.getPrice());
+        response.setTotalPrice(item.getTotalPrice());
         return response;
     }
 
