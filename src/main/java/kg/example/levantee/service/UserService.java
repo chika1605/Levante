@@ -1,7 +1,7 @@
 package kg.example.levantee.service;
 
-import kg.example.levantee.dto.UserDto.UserRequest;
-import kg.example.levantee.dto.UserDto.UserResponse;
+import kg.example.levantee.dto.userDto.UserRequest;
+import kg.example.levantee.dto.userDto.UserResponse;
 import kg.example.levantee.model.entity.User;
 import kg.example.levantee.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl {
+public class UserService {
 
     private final UserRepository userRepository;
 

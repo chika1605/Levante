@@ -1,4 +1,4 @@
-package kg.example.levantee.model.enums;
+package kg.example.levantee.model.enums.order;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

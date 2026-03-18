@@ -26,9 +26,16 @@ public class User {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdDate;
 
+    private LocalDateTime updatedDate;
+
     @PrePersist
     public void prePersist() {
         this.createdDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedDate = LocalDateTime.now();
     }
 
 }

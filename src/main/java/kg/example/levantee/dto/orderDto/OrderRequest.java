@@ -1,4 +1,4 @@
-package kg.example.levantee.dto.OrderDto;
+package kg.example.levantee.dto.orderDto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;

@@ -1,4 +1,4 @@
-package kg.example.levantee.dto.UserDto;
+package kg.example.levantee.dto.userDto;
 
 import lombok.Data;
 

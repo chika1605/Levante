@@ -1,6 +1,6 @@
-package kg.example.levantee.dto.ProductDto;
+package kg.example.levantee.dto.productDto;
 
-import kg.example.levantee.model.enums.ProductStatus;
+import kg.example.levantee.model.enums.product.ProductStatus;
 import lombok.Data;
 
 import java.time.LocalDateTime;

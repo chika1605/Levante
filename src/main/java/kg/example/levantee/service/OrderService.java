@@ -1,9 +1,9 @@
 package kg.example.levantee.service;
 
 import jakarta.transaction.Transactional;
-import kg.example.levantee.dto.OrderDto.OrderItemRequest;
-import kg.example.levantee.dto.OrderDto.OrderRequest;
-import kg.example.levantee.dto.OrderDto.OrderResponse;
+import kg.example.levantee.dto.orderDto.OrderItemRequest;
+import kg.example.levantee.dto.orderDto.OrderRequest;
+import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.mapper.OrderMapper;
 import kg.example.levantee.model.entity.Order;
 import kg.example.levantee.model.entity.OrderItem;
@@ -21,7 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImpl {
+public class OrderService {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;

@@ -1,7 +1,7 @@
 package kg.example.levantee.service;
 
-import kg.example.levantee.dto.ProductDto.ProductRequest;
-import kg.example.levantee.dto.ProductDto.ProductResponse;
+import kg.example.levantee.dto.productDto.ProductRequest;
+import kg.example.levantee.dto.productDto.ProductResponse;
 import kg.example.levantee.dto.mapper.ProductMapper;
 import kg.example.levantee.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductServiceImpl {
+public class ProductService {
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;

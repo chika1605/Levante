@@ -1,8 +1,9 @@
 package kg.example.levantee.controller;
 
-import kg.example.levantee.dto.UserDto.UserRequest;
-import kg.example.levantee.dto.UserDto.UserResponse;
-import kg.example.levantee.service.UserServiceImpl;
+import jakarta.validation.Valid;
+import kg.example.levantee.dto.userDto.UserRequest;
+import kg.example.levantee.dto.userDto.UserResponse;
+import kg.example.levantee.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,10 +13,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(@RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> register(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.register(request));
     }
 }

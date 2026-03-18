@@ -1,7 +1,7 @@
 package kg.example.levantee.dto.mapper;
 
-import kg.example.levantee.dto.ProductDto.ProductRequest;
-import kg.example.levantee.dto.ProductDto.ProductResponse;
+import kg.example.levantee.dto.productDto.ProductRequest;
+import kg.example.levantee.dto.productDto.ProductResponse;
 import kg.example.levantee.model.entity.Product;
 import org.springframework.stereotype.Component;
 

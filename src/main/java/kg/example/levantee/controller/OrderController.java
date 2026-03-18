@@ -1,9 +1,9 @@
 package kg.example.levantee.controller;
 
 import jakarta.validation.Valid;
-import kg.example.levantee.dto.OrderDto.OrderRequest;
-import kg.example.levantee.dto.OrderDto.OrderResponse;
-import kg.example.levantee.service.OrderServiceImpl;
+import kg.example.levantee.dto.orderDto.OrderRequest;
+import kg.example.levantee.dto.orderDto.OrderResponse;
+import kg.example.levantee.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OrderController {
 
-    private final OrderServiceImpl orderService;
+    private final OrderService orderService;
 
     @PostMapping
     public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest request) {

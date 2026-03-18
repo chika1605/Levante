@@ -1,4 +1,4 @@
-package kg.example.levantee.model.enums;
+package kg.example.levantee.model.enums.product;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

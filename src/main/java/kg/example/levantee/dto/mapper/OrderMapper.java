@@ -1,9 +1,9 @@
 package kg.example.levantee.dto.mapper;
 
 
-import kg.example.levantee.dto.OrderDto.OrderItemResponse;
-import kg.example.levantee.dto.OrderDto.OrderRequest;
-import kg.example.levantee.dto.OrderDto.OrderResponse;
+import kg.example.levantee.dto.orderDto.OrderItemResponse;
+import kg.example.levantee.dto.orderDto.OrderRequest;
+import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.model.entity.Order;
 import kg.example.levantee.model.entity.OrderItem;
 import kg.example.levantee.model.entity.Product;
@@ -52,7 +52,7 @@ public class OrderMapper {
         response.setId(order.getId());
         response.setOrderCode(order.getOrderCode());
         response.setUserId(order.getUser().getId());
-        response.setOrderDate(order.getOrderDate());
+        response.setOrderedDate(order.getOrderedDate());
         response.setTotalAmount(order.getTotalAmount());
         response.setTotalQuantity(order.getTotalQuantity());
         response.setStatus(order.getStatus());

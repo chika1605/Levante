@@ -1,8 +1,8 @@
 package kg.example.levantee.model.entity;
 
 import jakarta.persistence.*;
-import kg.example.levantee.model.enums.ProductStatus;
-import kg.example.levantee.model.enums.ProductStatusConverter;
+import kg.example.levantee.model.enums.product.ProductStatus;
+import kg.example.levantee.model.enums.product.ProductStatusConverter;
 import lombok.*;
 
 import java.time.LocalDateTime;

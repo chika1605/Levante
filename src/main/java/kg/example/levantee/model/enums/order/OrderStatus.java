@@ -1,4 +1,4 @@
-package kg.example.levantee.model.enums;
+package kg.example.levantee.model.enums.order;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
