@@ -1,10 +1,6 @@
 package kg.example.levantee.dto.productDto;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 @Data
@@ -27,5 +23,6 @@ public class ProductRequest {
 
     @NotNull(message = "Количество на складе обязательно")
     @Min(value = 0, message = "Количество на складе не может быть отрицательным")
+    @Max(value = 99999, message = "Количество на складе не может быть выше 99999")
     private Integer stock;
 }

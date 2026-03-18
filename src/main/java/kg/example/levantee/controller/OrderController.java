@@ -3,6 +3,7 @@ package kg.example.levantee.controller;
 import jakarta.validation.Valid;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
+import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
 import kg.example.levantee.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderResponse>> getAll() {
+    public ResponseEntity<List<OrderSummaryResponse>> getAll() {
         return ResponseEntity.ok(orderService.getAll());
     }
 }
