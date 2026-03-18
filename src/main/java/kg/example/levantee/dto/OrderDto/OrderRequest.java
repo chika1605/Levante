@@ -1,0 +1,23 @@
+package kg.example.levantee.dto.OrderDto;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class OrderRequest {
+
+    @NotNull(message = "ID пользователя обязателен")
+    private Long userId;
+
+    @NotBlank(message = "Код заказа обязателен")
+    private String orderCode;
+
+    @Valid
+    @NotEmpty(message = "Список товаров не может быть пустым")
+    private List<OrderItemRequest> items;
+}
