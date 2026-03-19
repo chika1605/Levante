@@ -2,7 +2,7 @@ package kg.example.levantee.service;
 
 import jakarta.transaction.Transactional;
 import kg.example.levantee.dto.mapper.OrderMapper;
-import kg.example.levantee.dto.orderDto.OrderItemRequest;
+import kg.example.levantee.dto.orderItemDto.OrderItemRequest;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
@@ -78,7 +78,7 @@ public class OrderService {
     }
 
     public Page<OrderSummaryResponse> getAll(Pageable pageable) {
-        return orderRepository.findAll(pageable)
+        return orderRepository.findAllOrders(pageable)
                 .map(orderMapper::toSummaryResponse);
     }
 }

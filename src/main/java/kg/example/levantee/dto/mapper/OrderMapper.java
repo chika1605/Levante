@@ -1,7 +1,8 @@
 package kg.example.levantee.dto.mapper;
 
 
-import kg.example.levantee.dto.orderDto.OrderItemResponse;
+import kg.example.levantee.dto.orderDto.OrderSummaryProjection;
+import kg.example.levantee.dto.orderItemDto.OrderItemResponse;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
@@ -63,15 +64,16 @@ public class OrderMapper {
         return response;
     }
 
-    public OrderSummaryResponse toSummaryResponse(Order order) {
+
+    public OrderSummaryResponse toSummaryResponse(OrderSummaryProjection p) {
         OrderSummaryResponse response = new OrderSummaryResponse();
-        response.setId(order.getId());
-        response.setOrderCode(order.getOrderCode());
-        response.setUserId(order.getUser().getId());
-        response.setOrderedDate(order.getOrderedDate());
-        response.setTotalAmount(order.getTotalAmount());
-        response.setTotalQuantity(order.getTotalQuantity());
-        response.setStatus(order.getStatus());
+        response.setId(p.getId());
+        response.setOrderCode(p.getOrderCode());
+        response.setUserId(p.getUserId());
+        response.setOrderedDate(p.getOrderedDate());
+        response.setTotalAmount(p.getTotalAmount());
+        response.setTotalQuantity(p.getTotalQuantity());
+        response.setStatus(p.getStatus());
         return response;
     }
 }

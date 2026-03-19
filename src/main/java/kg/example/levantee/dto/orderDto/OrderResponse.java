@@ -1,5 +1,6 @@
 package kg.example.levantee.dto.orderDto;
 
+import kg.example.levantee.dto.orderItemDto.OrderItemResponse;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import lombok.Data;
 

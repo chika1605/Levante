@@ -1,4 +1,4 @@
-package kg.example.levantee.dto.orderDto;
+package kg.example.levantee.dto.orderItemDto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
