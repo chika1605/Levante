@@ -4,6 +4,7 @@ import kg.example.levantee.dto.productDto.ProductProjection;
 import kg.example.levantee.dto.productDto.ProductRequest;
 import kg.example.levantee.dto.productDto.ProductResponse;
 import kg.example.levantee.model.entity.Product;
+import kg.example.levantee.model.enums.product.ProductStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -41,7 +42,7 @@ public class ProductMapper {
         response.setDescription(p.getDescription());
         response.setPrice(p.getPrice());
         response.setStock(p.getStock());
-        response.setStatus(p.getStatus());
+        response.setStatus(ProductStatus.fromId(p.getStatus()));
         response.setCreatedAt(p.getCreatedAt());
         response.setUpdatedAt(p.getUpdatedAt());
         return response;

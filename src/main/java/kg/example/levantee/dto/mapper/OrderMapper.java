@@ -10,6 +10,7 @@ import kg.example.levantee.model.entity.Order;
 import kg.example.levantee.model.entity.OrderItem;
 import kg.example.levantee.model.entity.Product;
 import kg.example.levantee.model.entity.User;
+import kg.example.levantee.model.enums.order.OrderStatus;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -73,7 +74,7 @@ public class OrderMapper {
         response.setOrderedDate(p.getOrderedDate());
         response.setTotalAmount(p.getTotalAmount());
         response.setTotalQuantity(p.getTotalQuantity());
-        response.setStatus(p.getStatus());
+        response.setStatus(OrderStatus.fromId(p.getStatus()));
         return response;
     }
 }

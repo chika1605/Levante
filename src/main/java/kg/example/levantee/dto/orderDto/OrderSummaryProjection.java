@@ -11,5 +11,5 @@ public interface OrderSummaryProjection {
     LocalDateTime getOrderedDate();
     Double getTotalAmount();
     Integer getTotalQuantity();
-    OrderStatus getStatus();
+    Short getStatus();
 }
