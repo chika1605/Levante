@@ -6,10 +6,13 @@ import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
 import kg.example.levantee.service.OrderService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+
 
 @RestController
 @RequestMapping("/orders")
@@ -24,7 +27,7 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<List<OrderSummaryResponse>> getAll() {
-        return ResponseEntity.ok(orderService.getAll());
+    public ResponseEntity<Page<OrderSummaryResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(orderService.getAll(pageable));
     }
 }

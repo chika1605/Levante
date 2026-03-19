@@ -15,8 +15,10 @@ import kg.example.levantee.repository.ProductRepository;
 import kg.example.levantee.repository.UserRepository;
 import kg.example.levantee.utils.exception.NotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
+import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,12 +38,10 @@ public class OrderService {
         User user = userRepository.findById(request.getUserId())
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        // 1. Собираем все ID продуктов
         List<Long> productIds = request.getItems().stream()
                 .map(OrderItemRequest::getProductId)
                 .toList();
 
-        // 2. Один запрос вместо N
         Map<Long, Product> productMap = productRepository.findAllByIdWithLock(productIds)
                 .stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
@@ -54,7 +54,6 @@ public class OrderService {
         int totalQuantity = 0;
 
         for (OrderItemRequest itemRequest : request.getItems()) {
-            // 3. Берём из Map — в БД не лезем
             Product product = productMap.get(itemRequest.getProductId());
             if (product == null) {
                 throw new NotFoundException("Продукт не найден");
@@ -78,9 +77,8 @@ public class OrderService {
         return orderMapper.toResponse(orderRepository.save(order));
     }
 
-    public List<OrderSummaryResponse> getAll() {
-        return orderRepository.findAll().stream()
-                .map(orderMapper::toSummaryResponse)
-                .toList();
+    public Page<OrderSummaryResponse> getAll(Pageable pageable) {
+        return orderRepository.findAll(pageable)
+                .map(orderMapper::toSummaryResponse);
     }
 }

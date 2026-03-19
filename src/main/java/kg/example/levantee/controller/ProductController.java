@@ -5,9 +5,11 @@ import kg.example.levantee.dto.productDto.ProductRequest;
 import kg.example.levantee.dto.productDto.ProductResponse;
 import kg.example.levantee.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 @RestController
@@ -23,7 +25,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAll() {
-        return ResponseEntity.ok(productService.getAll());
+    public ResponseEntity<Page<ProductResponse>> getAll(Pageable pageable) {
+        return ResponseEntity.ok(productService.getAll(pageable));
     }
 }

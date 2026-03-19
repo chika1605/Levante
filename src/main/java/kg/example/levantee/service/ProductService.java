@@ -6,9 +6,10 @@ import kg.example.levantee.dto.mapper.ProductMapper;
 import kg.example.levantee.repository.ProductRepository;
 import kg.example.levantee.utils.exception.AlreadyExistsException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +25,8 @@ public class ProductService {
         return productMapper.toResponse(productRepository.save(productMapper.toEntity(request)));
     }
 
-    public List<ProductResponse> getAll() {
-        return productRepository.findAll().stream().map(productMapper::toResponse).toList();
+    public Page<ProductResponse> getAll(Pageable pageable) {
+        return productRepository.findAll(pageable)
+                .map(productMapper::toResponse);
     }
 }
