@@ -9,15 +9,15 @@ import org.springframework.data.jpa.repository.Query;
 
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    @Query("""
-        SELECT o.id as id,
-               o.orderCode as orderCode,
-               o.user.id as userId,
-               o.orderedDate as orderedDate,
-               o.totalAmount as totalAmount,
-               o.totalQuantity as totalQuantity,
-               o.status as status
-        FROM Order o
-        """)
+    @Query(value = """
+        SELECT o.id,
+               o.order_code as orderCode,
+               o.user_id as userId,
+               o.ordered_date as orderedDate,
+               o.total_amount as totalAmount,
+               o.total_quantity as totalQuantity,
+               o.status
+        FROM orders o
+        """, nativeQuery = true)
     Page<OrderSummaryProjection> findAllOrders(Pageable pageable);
 }

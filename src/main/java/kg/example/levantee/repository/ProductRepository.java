@@ -14,24 +14,24 @@ import java.util.List;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("""
-        SELECT p
-        FROM Product p
-        WHERE p.id IN :ids
-        """)
+    @Query(value = """
+        SELECT *
+        FROM products
+        WHERE id IN :ids
+        """, nativeQuery = true)
     List<Product> findAllByIdWithLock(@Param("ids") List<Long> ids);
     boolean existsByCode(String code);
-    @Query("""
-        SELECT p.id as id,
-               p.code as code,
-               p.name as name,
-               p.description as description,
-               p.price as price,
-               p.stock as stock,
-               p.status as status,
-               p.createdAt as createdAt,
-               p.updatedAt as updatedAt
-        FROM Product p
-        """)
+    @Query(value = """
+        SELECT p.id,
+               p.code,
+               p.name,
+               p.description,
+               p.price,
+               p.stock,
+               p.status,
+               p.created_at,
+               p.updated_at
+        FROM products p
+        """, nativeQuery = true)
     Page<ProductProjection> findAllProducts(Pageable pageable);
 }
