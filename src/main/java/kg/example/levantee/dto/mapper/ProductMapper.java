@@ -1,5 +1,6 @@
 package kg.example.levantee.dto.mapper;
 
+import kg.example.levantee.dto.productDto.ProductProjection;
 import kg.example.levantee.dto.productDto.ProductRequest;
 import kg.example.levantee.dto.productDto.ProductResponse;
 import kg.example.levantee.model.entity.Product;
@@ -29,6 +30,20 @@ public class ProductMapper {
         response.setStatus(product.getStatus());
         response.setCreatedAt(product.getCreatedAt());
         response.setUpdatedAt(product.getUpdatedAt());
+        return response;
+    }
+
+    public ProductResponse toResponse(ProductProjection p) {
+        ProductResponse response = new ProductResponse();
+        response.setId(p.getId());
+        response.setCode(p.getCode());
+        response.setName(p.getName());
+        response.setDescription(p.getDescription());
+        response.setPrice(p.getPrice());
+        response.setStock(p.getStock());
+        response.setStatus(p.getStatus());
+        response.setCreatedAt(p.getCreatedAt());
+        response.setUpdatedAt(p.getUpdatedAt());
         return response;
     }
 }

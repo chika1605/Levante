@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +29,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<OrderSummaryResponse>> getAll(Pageable pageable) {
+    public ResponseEntity<Page<OrderSummaryResponse>> getAll(
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.getAll(pageable));
     }
 }

@@ -26,7 +26,7 @@ public class ProductService {
     }
 
     public Page<ProductResponse> getAll(Pageable pageable) {
-        return productRepository.findAll(pageable)
+        return productRepository.findAllProducts(pageable)
                 .map(productMapper::toResponse);
     }
 }
