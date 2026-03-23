@@ -3,7 +3,7 @@ package kg.example.levantee.service;
 import kg.example.levantee.dto.mapper.UserMapper;
 import kg.example.levantee.dto.userDto.UserRequest;
 import kg.example.levantee.dto.userDto.UserResponse;
-import kg.example.levantee.model.entity.User;
+import kg.example.levantee.model.entity.user.User;
 import kg.example.levantee.repository.UserRepository;
 import kg.example.levantee.utils.exception.AlreadyExistsException;
 import lombok.RequiredArgsConstructor;

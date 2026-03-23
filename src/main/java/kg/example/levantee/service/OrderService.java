@@ -6,10 +6,10 @@ import kg.example.levantee.dto.orderItemDto.OrderItemRequest;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
-import kg.example.levantee.model.entity.Order;
-import kg.example.levantee.model.entity.OrderItem;
-import kg.example.levantee.model.entity.Product;
-import kg.example.levantee.model.entity.User;
+import kg.example.levantee.model.entity.order.Order;
+import kg.example.levantee.model.entity.orderItem.OrderItem;
+import kg.example.levantee.model.entity.product.Product;
+import kg.example.levantee.model.entity.user.User;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ProductRepository;
 import kg.example.levantee.repository.UserRepository;
@@ -46,12 +46,11 @@ public class OrderService {
                 .stream()
                 .collect(Collectors.toMap(Product::getId, p -> p));
 
-        Order order = orderMapper.toEntity(user, request, new ArrayList<>(), 0, 0);
+        Order order = orderMapper.toEntity(user, request);
         order = orderRepository.save(order);
 
         List<OrderItem> items = new ArrayList<>();
-        double totalAmount = 0;
-        int totalQuantity = 0;
+
 
         for (OrderItemRequest itemRequest : request.getItems()) {
             Product product = productMap.get(itemRequest.getProductId());
@@ -67,14 +66,11 @@ public class OrderService {
 
             OrderItem item = orderMapper.toItem(order, product, itemRequest.getQuantity());
             items.add(item);
-            totalAmount += item.getTotalPrice();
-            totalQuantity += item.getQuantity();
         }
 
         order.setItems(items);
-        order.setTotalAmount(totalAmount);
-        order.setTotalQuantity(totalQuantity);
-        return orderMapper.toResponse(orderRepository.save(order));
+        orderRepository.save(order);
+        return orderMapper.toResponse(order);
     }
 
     public Page<OrderSummaryResponse> getAll(Pageable pageable) {

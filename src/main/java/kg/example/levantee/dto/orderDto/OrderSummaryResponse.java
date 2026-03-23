@@ -13,5 +13,6 @@ public class OrderSummaryResponse {
     private LocalDateTime orderedDate;
     private Double totalAmount;
     private Integer totalQuantity;
+    private Double totalWeight;
     private OrderStatus status;
 }

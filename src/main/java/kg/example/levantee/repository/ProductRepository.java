@@ -1,7 +1,7 @@
 package kg.example.levantee.repository;
 
-import kg.example.levantee.dto.productDto.ProductProjection;
-import kg.example.levantee.model.entity.Product;
+import kg.example.levantee.model.entity.product.ProductProjection;
+import kg.example.levantee.model.entity.product.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -25,6 +25,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
                p.name,
                p.description,
                p.price,
+               p.weight,
                p.stock,
                p.status,
                p.created_at,

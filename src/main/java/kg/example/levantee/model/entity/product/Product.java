@@ -1,4 +1,4 @@
-package kg.example.levantee.model.entity;
+package kg.example.levantee.model.entity.product;
 
 import jakarta.persistence.*;
 import kg.example.levantee.model.enums.product.ProductStatus;
@@ -21,6 +21,9 @@ public class Product {
 
     @Column(nullable = false, unique = true)
     private String code;
+
+    @Column(nullable = false)
+    private Double weight;
 
     @Column(nullable = false)
     private String name;

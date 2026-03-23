@@ -1,32 +1,30 @@
 package kg.example.levantee.dto.mapper;
 
-
-import kg.example.levantee.dto.orderDto.OrderSummaryProjection;
+import kg.example.levantee.model.entity.order.OrderSummaryProjection;
 import kg.example.levantee.dto.orderItemDto.OrderItemResponse;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
-import kg.example.levantee.model.entity.Order;
-import kg.example.levantee.model.entity.OrderItem;
-import kg.example.levantee.model.entity.Product;
-import kg.example.levantee.model.entity.User;
+import kg.example.levantee.model.entity.order.Order;
+import kg.example.levantee.model.entity.orderItem.OrderItem;
+import kg.example.levantee.model.entity.product.Product;
+import kg.example.levantee.model.entity.user.User;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Component
 public class OrderMapper {
 
-    public Order toEntity(User user, OrderRequest request, List<OrderItem> items, double totalAmount, int totalQuantity) {
+    public Order toEntity(User user, OrderRequest request) {
         String orderCode = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         return Order.builder()
                 .orderCode(orderCode)
                 .user(user)
-                .items(items)
-                .totalAmount(totalAmount)
-                .totalQuantity(totalQuantity)
+                .items(new ArrayList<>())
                 .build();
     }
 
@@ -47,6 +45,7 @@ public class OrderMapper {
         response.setProductId(item.getProduct().getId());
         response.setProductName(item.getProduct().getName());
         response.setUnitPrice(item.getUnitPrice());
+        response.setWeight(item.getProduct().getWeight());
         response.setQuantity(item.getQuantity());
         response.setTotalPrice(item.getTotalPrice());
         return response;
@@ -58,13 +57,17 @@ public class OrderMapper {
         response.setOrderCode(order.getOrderCode());
         response.setUserId(order.getUser().getId());
         response.setOrderedDate(order.getOrderedDate());
-        response.setTotalAmount(order.getTotalAmount());
-        response.setTotalQuantity(order.getTotalQuantity());
         response.setStatus(order.getStatus());
-        response.setItems(order.getItems().stream().map(this::toItemResponse).toList());
+        List<OrderItem> items = order.getItems();
+        response.setItems(items.stream().map(this::toItemResponse).toList());
+        response.setTotalAmount(items.stream().mapToDouble(OrderItem::getTotalPrice).sum());
+        response.setTotalQuantity(items.stream().mapToInt(OrderItem::getQuantity).sum());
+        response.setTotalWeight(items.stream()
+                .mapToDouble(item -> item.getProduct().getWeight() != null
+                        ? item.getProduct().getWeight() * item.getQuantity() : 0)
+                .sum());
         return response;
     }
-
 
     public OrderSummaryResponse toSummaryResponse(OrderSummaryProjection p) {
         OrderSummaryResponse response = new OrderSummaryResponse();
@@ -74,6 +77,7 @@ public class OrderMapper {
         response.setOrderedDate(p.getOrderedDate());
         response.setTotalAmount(p.getTotalAmount());
         response.setTotalQuantity(p.getTotalQuantity());
+        response.setTotalWeight(p.getTotalWeight());
         response.setStatus(OrderStatus.fromId(p.getStatus()));
         return response;
     }

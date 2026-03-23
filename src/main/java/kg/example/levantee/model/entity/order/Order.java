@@ -1,7 +1,9 @@
-package kg.example.levantee.model.entity;
+package kg.example.levantee.model.entity.order;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+import kg.example.levantee.model.entity.orderItem.OrderItem;
+import kg.example.levantee.model.entity.user.User;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.model.enums.order.OrderStatusConverter;
 import lombok.*;
@@ -34,13 +36,6 @@ public class Order {
 
     @Column(nullable = false)
     private LocalDateTime orderedDate;
-
-    @Column(nullable = false)
-    private Double totalAmount;
-
-    @Column(nullable = false)
-    private Integer totalQuantity;
-
 
     @Column(nullable = false)
     @Convert(converter = OrderStatusConverter.class)

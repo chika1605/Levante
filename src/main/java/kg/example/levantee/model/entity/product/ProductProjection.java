@@ -1,4 +1,4 @@
-package kg.example.levantee.dto.productDto;
+package kg.example.levantee.model.entity.product;
 
 import java.time.LocalDateTime;
 
@@ -8,6 +8,7 @@ public interface ProductProjection {
     String getName();
     String getDescription();
     Double getPrice();
+    Double getWeight();
     Integer getStock();
     Short  getStatus();
     LocalDateTime getCreatedAt();

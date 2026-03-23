@@ -1,11 +1,12 @@
 package kg.example.levantee.repository;
 
-import kg.example.levantee.dto.orderDto.OrderSummaryProjection;
-import kg.example.levantee.model.entity.Order;
+import kg.example.levantee.model.entity.order.OrderSummaryProjection;
+import kg.example.levantee.model.entity.order.Order;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -14,10 +15,31 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
                o.order_code as orderCode,
                o.user_id as userId,
                o.ordered_date as orderedDate,
-               o.total_amount as totalAmount,
-               o.total_quantity as totalQuantity,
+               oi.totalAmount as totalAmount,
+               oi.totalQuantity as totalQuantity,
+               oi.totalWeight as totalWeight,
                o.status
         FROM orders o
-        """, nativeQuery = true)
+        LEFT JOIN (
+                    SELECT oi.order_id,
+                           SUM(oi.total_price)        as totalAmount,
+                           SUM(oi.quantity)           as totalQuantity,
+                           SUM(oi.quantity * p.weight) as totalWeight
+                    FROM order_items oi
+                    JOIN products p ON p.id = oi.product_id
+                    GROUP BY oi.order_id
+                  ) oi ON oi.order_id = o.id
+        """,
+        countQuery = "SELECT COUNT(DISTINCT o.id) " +
+                "FROM orders o JOIN order_items oi ON oi.order_id = o.id",
+        nativeQuery = true)
     Page<OrderSummaryProjection> findAllOrders(Pageable pageable);
+
+    @Query(value = """
+        SELECT SUM(oi.quantity * p.weight)
+        FROM order_items oi
+        JOIN products p ON p.id = oi.product_id
+        WHERE oi.order_id = :orderId
+        """, nativeQuery = true)
+    Double calculateTotalWeight(@Param("orderId") Long orderId);
 }

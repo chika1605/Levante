@@ -1,7 +1,9 @@
-package kg.example.levantee.model.entity;
+package kg.example.levantee.model.entity.orderItem;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import kg.example.levantee.model.entity.product.Product;
+import kg.example.levantee.model.entity.order.Order;
 import lombok.*;
 
 @Entity

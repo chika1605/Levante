@@ -2,7 +2,7 @@ package kg.example.levantee.dto.mapper;
 
 import kg.example.levantee.dto.userDto.UserRequest;
 import kg.example.levantee.dto.userDto.UserResponse;
-import kg.example.levantee.model.entity.User;
+import kg.example.levantee.model.entity.user.User;
 import org.springframework.stereotype.Component;
 
 @Component

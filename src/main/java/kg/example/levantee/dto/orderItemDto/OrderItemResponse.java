@@ -8,6 +8,7 @@ public class OrderItemResponse {
     private Long productId;
     private String productName;
     private Double unitPrice;
+    private Double weight;
     private Integer quantity;
     private Double totalPrice;
 }

@@ -1,6 +1,4 @@
-package kg.example.levantee.dto.orderDto;
-
-import kg.example.levantee.model.enums.order.OrderStatus;
+package kg.example.levantee.model.entity.order;
 
 import java.time.LocalDateTime;
 
@@ -11,5 +9,6 @@ public interface OrderSummaryProjection {
     LocalDateTime getOrderedDate();
     Double getTotalAmount();
     Integer getTotalQuantity();
+    Double getTotalWeight();
     Short getStatus();
 }

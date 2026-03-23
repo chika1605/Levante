@@ -1,4 +1,4 @@
-package kg.example.levantee.model.entity;
+package kg.example.levantee.model.entity.user;
 
 import jakarta.persistence.*;
 import lombok.*;
