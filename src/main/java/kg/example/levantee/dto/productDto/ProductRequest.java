@@ -25,6 +25,18 @@ public class ProductRequest {
     @Positive(message = "Вес должен быть положительным")
     private Double weight;
 
+    @NotNull(message = "Длина обязательна")
+    @Positive(message = "Длина должна быть положительной")
+    private Double length;
+
+    @NotNull(message = "Ширина обязательна")
+    @Positive(message = "Ширина должна быть положительной")
+    private Double width;
+
+    @NotNull(message = "Высота обязательна")
+    @Positive(message = "Высота должна быть положительной")
+    private Double height;
+
     @NotNull(message = "Количество на складе обязательно")
     @Min(value = 0, message = "Количество на складе не может быть отрицательным")
     @Max(value = 99999, message = "Количество на складе не может быть выше 99999")

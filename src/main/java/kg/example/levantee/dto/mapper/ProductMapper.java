@@ -17,6 +17,9 @@ public class ProductMapper {
                 .description(request.getDescription())
                 .price(request.getPrice())
                 .weight(request.getWeight())
+                .length(request.getLength())
+                .width(request.getWidth())
+                .height(request.getHeight())
                 .stock(request.getStock())
                 .build();
     }
@@ -29,6 +32,9 @@ public class ProductMapper {
         response.setDescription(product.getDescription());
         response.setPrice(product.getPrice());
         response.setWeight(product.getWeight());
+        response.setLength(product.getLength());
+        response.setWidth(product.getWidth());
+        response.setHeight(product.getHeight());
         response.setStock(product.getStock());
         response.setStatus(product.getStatus());
         response.setCreatedAt(product.getCreatedAt());
@@ -44,6 +50,9 @@ public class ProductMapper {
         response.setDescription(p.getDescription());
         response.setPrice(p.getPrice());
         response.setWeight(p.getWeight());
+        response.setLength(p.getLength());
+        response.setWidth(p.getWidth());
+        response.setHeight(p.getHeight());
         response.setStock(p.getStock());
         response.setStatus(ProductStatus.fromId(p.getStatus()));
         response.setCreatedAt(p.getCreatedAt());

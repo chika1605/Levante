@@ -2,11 +2,14 @@ package kg.example.levantee.repository;
 
 import kg.example.levantee.model.entity.order.OrderSummaryProjection;
 import kg.example.levantee.model.entity.order.Order;
+import kg.example.levantee.service.shipment.dto.ShipmentPackage;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
@@ -35,11 +38,12 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         nativeQuery = true)
     Page<OrderSummaryProjection> findAllOrders(Pageable pageable);
 
-    @Query(value = """
-        SELECT SUM(oi.quantity * p.weight)
-        FROM order_items oi
-        JOIN products p ON p.id = oi.product_id
-        WHERE oi.order_id = :orderId
-        """, nativeQuery = true)
-    Double calculateTotalWeight(@Param("orderId") Long orderId);
+    @Query("""
+        SELECT new kg.example.levantee.service.shipment.dto.ShipmentPackage(
+            p.weight, p.length, p.width, p.height, oi.quantity)
+        FROM OrderItem oi
+        JOIN oi.product p
+        WHERE oi.order.id = :orderId
+        """)
+    List<ShipmentPackage> findShipmentPackages(@Param("orderId") Long orderId);
 }

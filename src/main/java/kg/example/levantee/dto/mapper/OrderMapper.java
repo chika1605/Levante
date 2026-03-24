@@ -46,6 +46,9 @@ public class OrderMapper {
         response.setProductName(item.getProduct().getName());
         response.setUnitPrice(item.getUnitPrice());
         response.setWeight(item.getProduct().getWeight());
+        response.setLength(item.getProduct().getLength());
+        response.setWidth(item.getProduct().getWidth());
+        response.setHeight(item.getProduct().getHeight());
         response.setQuantity(item.getQuantity());
         response.setTotalPrice(item.getTotalPrice());
         return response;

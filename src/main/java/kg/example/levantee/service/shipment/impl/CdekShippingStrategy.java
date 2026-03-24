@@ -1,21 +1,23 @@
 package kg.example.levantee.service.shipment.impl;
 
 import kg.example.levantee.service.shipment.ShippingStrategy;
+import kg.example.levantee.service.shipment.cdek.CdekClient;
+import kg.example.levantee.service.shipment.dto.CdekParams;
+import kg.example.levantee.service.shipment.dto.ShipmentPackage;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class CdekShippingStrategy implements ShippingStrategy {
 
-    private static final double BASE_PRICE = 200.0;
-    private static final double MAX_BASE_WEIGHT = 4.0;
-    private static final double PRICE_PER_KG = 45.0;
+    private final CdekClient cdekClient;
 
     @Override
-    public double calculate(double totalWeight) {
-        if (totalWeight <= MAX_BASE_WEIGHT) {
-            return BASE_PRICE;
-        }
-        return BASE_PRICE + (totalWeight - MAX_BASE_WEIGHT) * PRICE_PER_KG;
+    public double calculate(List<ShipmentPackage> packages, CdekParams cdekParams) {
+        return cdekClient.calculateTariff(packages, cdekParams);
     }
 
     @Override

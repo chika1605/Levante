@@ -1,21 +1,30 @@
 package kg.example.levantee.service.shipment.impl;
 
 import kg.example.levantee.service.shipment.ShippingStrategy;
+import kg.example.levantee.service.shipment.dto.CdekParams;
+import kg.example.levantee.service.shipment.dto.ShipmentPackage;
+import kg.example.levantee.service.shipment.yildam.YildamProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
+@RequiredArgsConstructor
 public class YildamShippingStrategy implements ShippingStrategy {
 
-    private static final double BASE_PRICE = 190.0;
-    private static final double MAX_BASE_WEIGHT = 6.0;
-    private static final double PRICE_PER_KG = 60.0;
+    private final YildamProperties properties;
 
     @Override
-    public double calculate(double totalWeight) {
-        if (totalWeight <= MAX_BASE_WEIGHT) {
-            return BASE_PRICE;
+    public double calculate(List<ShipmentPackage> packages, CdekParams cdekParams) {
+        double totalWeight = packages.stream()
+                .mapToDouble(p -> p.getWeightKg() * p.getQuantity())
+                .sum();
+        if (totalWeight <= properties.getMaxBaseWeight()) {
+            return properties.getBasePrice();
         }
-        return BASE_PRICE + (totalWeight - MAX_BASE_WEIGHT) * PRICE_PER_KG;
+        return properties.getBasePrice()
+                + (totalWeight - properties.getMaxBaseWeight()) * properties.getPricePerKg();
     }
 
     @Override

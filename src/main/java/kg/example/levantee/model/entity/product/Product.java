@@ -26,6 +26,15 @@ public class Product {
     private Double weight;
 
     @Column(nullable = false)
+    private Double length;
+
+    @Column(nullable = false)
+    private Double width;
+
+    @Column(nullable = false)
+    private Double height;
+
+    @Column(nullable = false)
     private String name;
 
     private String description;

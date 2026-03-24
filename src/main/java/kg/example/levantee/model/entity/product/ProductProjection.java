@@ -9,6 +9,9 @@ public interface ProductProjection {
     String getDescription();
     Double getPrice();
     Double getWeight();
+    Double getLength();
+    Double getWidth();
+    Double getHeight();
     Integer getStock();
     Short  getStatus();
     LocalDateTime getCreatedAt();

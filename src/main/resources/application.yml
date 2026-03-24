@@ -1,3 +1,18 @@
+cdek:
+  api:
+    url: https://api.edu.cdek.ru/v2
+    client-id: ${CDEK_CLIENT_ID}
+    client-secret: ${CDEK_CLIENT_SECRET}
+    from-city-code: 270
+    to-city-code: 44
+    tariff-code: 136
+
+yildam:
+  pricing:
+    base-price: 190.0
+    max-base-weight: 6.0
+    price-per-kg: 60.0
+
 spring:
   application:
     name: Levantee
