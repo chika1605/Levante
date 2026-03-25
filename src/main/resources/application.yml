@@ -5,6 +5,9 @@ cdek:
     client-secret: RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5
     from-city-code: 5444
     tariff-code: 136
+    sender-name: Levantee Shop
+    sender-phone: "+79001234567"
+    sender-address: ул. Ленина, д. 1
 
 yildam:
   pricing:
@@ -15,6 +18,10 @@ yildam:
 spring:
   application:
     name: Levantee
+  data:
+    redis:
+      host: localhost
+      port: 6379
   datasource:
     url: jdbc:postgresql://localhost:5432/orderservice
     username: postgres

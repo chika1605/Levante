@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,6 +21,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AlreadyExistsException.class)
     public ResponseEntity<String> handleAlreadyExists(AlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(PriceChangedException.class)
+    public ResponseEntity<Map<String, Object>> handlePriceChanged(PriceChangedException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", "PRICE_CHANGED");
+        body.put("old_price", ex.getOldPrice());
+        body.put("new_price", ex.getNewPrice());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

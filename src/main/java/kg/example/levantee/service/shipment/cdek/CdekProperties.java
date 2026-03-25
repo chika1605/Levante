@@ -13,4 +13,7 @@ public class CdekProperties {
     private String clientSecret;
     private int fromCityCode;
     private int tariffCode;
+    private String senderName;
+    private String senderPhone;
+    private String senderAddress;
 }

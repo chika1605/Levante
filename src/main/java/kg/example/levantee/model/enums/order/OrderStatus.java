@@ -5,7 +5,8 @@ public enum OrderStatus {
     PENDING((short) 2),
     PAID((short) 3),
     CANCELLED((short) 4),
-    SHIPPED((short) 5);
+    SHIPPED((short) 5),
+    COMPLETED((short) 6);
 
     public final short id;
 

@@ -20,6 +20,7 @@ public class CdekCreateOrderRequest {
 
     private String recipientName;
     private String recipientPhone;
+    private String recipientEmail;
 
     private List<ShipmentPackage> packages;
 

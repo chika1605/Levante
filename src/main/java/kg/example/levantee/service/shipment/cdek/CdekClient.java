@@ -7,345 +7,288 @@ import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffListResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffRequest;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffResponse;
-import kg.example.levantee.service.shipment.cdek.model.CdekTokenResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class CdekClient {
 
+    private static final int MAX_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 1_000;
+
     private final RestTemplate restTemplate;
     private final CdekProperties properties;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final CdekAuthService cdekAuthService;
 
-    private String cachedToken;
-    private LocalDateTime tokenExpiresAt;
+    // ─── Retry ────────────────────────────────────────────────────────────────
 
-    private synchronized String getToken() {
-        if (properties.getClientId() == null || properties.getClientId().isBlank()
-                || properties.getClientSecret() == null || properties.getClientSecret().isBlank()) {
-            throw new IllegalStateException(
-                    "CDEK credentials не настроены. Задайте CDEK_CLIENT_ID и CDEK_CLIENT_SECRET в переменных окружения");
+    private <T> T withRetry(String operation, Supplier<T> call) {
+        RestClientException lastException = null;
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                return call.get();
+            } catch (HttpClientErrorException e) {
+                // 4xx — не ретраим, сразу бросаем с телом ответа
+                log.error("CDEK [{}] ошибка {}: {}", operation, e.getStatusCode(), e.getResponseBodyAsString());
+                throw new IllegalStateException("CDEK вернул ошибку: " + e.getResponseBodyAsString(), e);
+            } catch (RestClientException e) {
+                lastException = e;
+                if (attempt < MAX_RETRIES) {
+                    log.warn("CDEK [{}] попытка {}/{} не удалась: {}", operation, attempt, MAX_RETRIES, e.getMessage());
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }
         }
-        log.debug("CDEK clientId='{}'", properties.getClientId());
-        if (cachedToken != null && LocalDateTime.now().isBefore(tokenExpiresAt)) {
-            return cachedToken;
-        }
-
-        log.info("Получение нового токена CDEK");
-
-        HttpHeaders tokenHeaders = new HttpHeaders();
-        tokenHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> tokenBody = new LinkedMultiValueMap<>();
-        tokenBody.add("grant_type", "client_credentials");
-        tokenBody.add("client_id", properties.getClientId());
-        tokenBody.add("client_secret", properties.getClientSecret());
-
-        HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(tokenBody, tokenHeaders);
-
-        CdekTokenResponse response = restTemplate.postForObject(
-                properties.getUrl() + "/oauth/token",
-                tokenRequest,
-                CdekTokenResponse.class
-        );
-
-        if (response == null || response.getAccessToken() == null) {
-            throw new IllegalStateException("Не удалось получить токен CDEK");
-        }
-
-        cachedToken = response.getAccessToken();
-        tokenExpiresAt = LocalDateTime.now().plusSeconds(response.getExpiresIn() - 60);
-
-        log.info("Токен CDEK получен, действителен до: {}", tokenExpiresAt);
-        return cachedToken;
+        log.error("CDEK [{}] недоступен после {} попыток", operation, MAX_RETRIES);
+        throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже", lastException);
     }
+
+    // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private HttpHeaders authHeaders() {
+        HttpHeaders h = new HttpHeaders();
+        h.setBearerAuth(cdekAuthService.getToken());
+        return h;
+    }
+
+    private HttpHeaders authJsonHeaders() {
+        HttpHeaders h = authHeaders();
+        h.setContentType(MediaType.APPLICATION_JSON);
+        return h;
+    }
+
+    // ─── Tariff calculation ───────────────────────────────────────────────────
 
     public double calculateTariff(List<ShipmentPackage> items, ShipmentParams params) {
         int fromCityCode = properties.getFromCityCode();
         int toCityCode   = params.getToCityCode();
-        int tariffCode   = params.getTariffCode()   > 0 ? params.getTariffCode()   : properties.getTariffCode();
+        int tariffCode   = params.getTariffCode() > 0 ? params.getTariffCode() : properties.getTariffCode();
 
-        if (toCityCode <= 0) {
-            throw new IllegalArgumentException("Укажите код города получения");
-        }
+        if (toCityCode <= 0) throw new IllegalArgumentException("Укажите код города получения");
 
-        double totalWeightKg = items.stream()
-                .mapToDouble(p -> p.getWeightKg() * p.getQuantity())
-                .sum();
-
+        double totalWeightKg = items.stream().mapToDouble(p -> p.getWeightKg() * p.getQuantity()).sum();
         if (totalWeightKg > 500.0) {
             throw new IllegalArgumentException(
                     "Вес заказа %.1f кг превышает максимально допустимый лимит CDEK (500 кг)".formatted(totalWeightKg));
         }
 
-        try {
-            String token = getToken();
+        List<CdekTariffRequest.Package> packages = buildTariffPackages(items);
 
-            List<CdekTariffRequest.Package> packages = items.stream()
-                    .flatMap(item -> {
-                        int weightGrams = (int) Math.max(100, Math.round(item.getWeightKg() * 1000));
-                        CdekTariffRequest.Package pkg = new CdekTariffRequest.Package(
-                                weightGrams,
-                                (int) Math.max(1, item.getLengthCm()),
-                                (int) Math.max(1, item.getWidthCm()),
-                                (int) Math.max(1, item.getHeightCm()));
-                        return java.util.Collections.nCopies(item.getQuantity(), pkg).stream();
-                    })
-                    .toList();
+        CdekTariffRequest request = CdekTariffRequest.builder()
+                .tariffCode(tariffCode)
+                .fromLocation(new CdekTariffRequest.Location(fromCityCode))
+                .toLocation(new CdekTariffRequest.Location(toCityCode))
+                .packages(packages)
+                .build();
 
-            CdekTariffRequest request = CdekTariffRequest.builder()
-                    .tariffCode(tariffCode)
-                    .fromLocation(new CdekTariffRequest.Location(fromCityCode))
-                    .toLocation(new CdekTariffRequest.Location(toCityCode))
-                    .packages(packages)
-                    .build();
+        log.info("Расчёт тарифа CDEK: вес={}кг, тариф={}", totalWeightKg, tariffCode);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
+        CdekTariffResponse response = withRetry("calculateTariff", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/calculator/tariff",
+                        new HttpEntity<>(request, authJsonHeaders()),
+                        CdekTariffResponse.class));
 
-            HttpEntity<CdekTariffRequest> entity = new HttpEntity<>(request, headers);
+        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на расчёт тарифа");
+        return response.getTotalSum();
+    }
 
-            log.info("Расчёт тарифа CDEK: вес={}кг, мест={}, тариф={}, откуда={}, куда={}",
-                    totalWeightKg, packages.size(), tariffCode, fromCityCode, toCityCode);
+    public CdekTariffResponse calculateSingleTariff(List<ShipmentPackage> items, ShipmentParams params,
+                                                     Double insuranceAmount) {
+        int fromCityCode = properties.getFromCityCode();
+        int toCityCode   = params.getToCityCode();
+        int tariffCode   = params.getTariffCode() > 0 ? params.getTariffCode() : properties.getTariffCode();
 
-            try {
-                log.info("CDEK запрос JSON: {}", objectMapper.writeValueAsString(request));
-            } catch (JsonProcessingException ignored) {}
+        List<CdekTariffRequest.Package> packages = buildTariffPackages(items);
+        List<CdekTariffRequest.Service> services = insuranceAmount != null && insuranceAmount > 0
+                ? List.of(new CdekTariffRequest.Service("INSURANCE", String.valueOf(insuranceAmount.intValue())))
+                : null;
 
-            CdekTariffResponse response = restTemplate.postForObject(
-                    properties.getUrl() + "/calculator/tariff",
-                    entity,
-                    CdekTariffResponse.class
-            );
+        CdekTariffRequest request = CdekTariffRequest.builder()
+                .tariffCode(tariffCode)
+                .fromLocation(new CdekTariffRequest.Location(fromCityCode))
+                .toLocation(new CdekTariffRequest.Location(toCityCode))
+                .packages(packages)
+                .services(services)
+                .build();
 
-            if (response == null) {
-                throw new IllegalStateException("CDEK не вернул ответ на расчёт тарифа");
-            }
+        CdekTariffResponse response = withRetry("calculateSingleTariff", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/calculator/tariff",
+                        new HttpEntity<>(request, authJsonHeaders()),
+                        CdekTariffResponse.class));
 
-            log.info("Тариф CDEK: {} {}, срок {}-{} дней",
-                    response.getTotalSum(), response.getCurrency(),
-                    response.getPeriodMin(), response.getPeriodMax());
-
-            return response.getTotalSum();
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
-        }
+        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на расчёт тарифа");
+        return response;
     }
 
     public CdekTariffListResponse getTariffList(int toCityCode) {
-        int resolvedFrom = properties.getFromCityCode();
-        int resolvedTo   = toCityCode;
+        CdekTariffRequest request = CdekTariffRequest.builder()
+                .fromLocation(new CdekTariffRequest.Location(properties.getFromCityCode()))
+                .toLocation(new CdekTariffRequest.Location(toCityCode))
+                .packages(List.of(new CdekTariffRequest.Package(1000, 10, 10, 10)))
+                .build();
 
-        try {
-            String token = getToken();
+        CdekTariffListResponse response = withRetry("getTariffList", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/calculator/tarifflist",
+                        new HttpEntity<>(request, authJsonHeaders()),
+                        CdekTariffListResponse.class));
 
-            CdekTariffRequest request = CdekTariffRequest.builder()
-                    .fromLocation(new CdekTariffRequest.Location(resolvedFrom))
-                    .toLocation(new CdekTariffRequest.Location(resolvedTo))
-                    .packages(List.of(new CdekTariffRequest.Package(1000, 10, 10, 10)))
-                    .build();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<CdekTariffRequest> entity = new HttpEntity<>(request, headers);
-
-            log.info("Запрос тарифного листа CDEK: откуда={}, куда={}", resolvedFrom, resolvedTo);
-
-            CdekTariffListResponse response = restTemplate.postForObject(
-                    properties.getUrl() + "/calculator/tarifflist",
-                    entity,
-                    CdekTariffListResponse.class
-            );
-
-            if (response == null || response.getTariffCodes() == null) {
-                throw new IllegalStateException("CDEK не вернул список тарифов");
-            }
-
-            log.info("Получено тарифов от CDEK: {}", response.getTariffCodes().size());
-            return response;
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен при запросе тарифов: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
+        if (response == null || response.getTariffCodes() == null) {
+            throw new IllegalStateException("CDEK не вернул список тарифов");
         }
+        return response;
     }
 
-    // Шаг 2: Список ПВЗ (только если пользователь выбрал WAREHOUSE)
+    // ─── Delivery points ──────────────────────────────────────────────────────
+
     public List<CdekDeliveryPoint> getDeliveryPoints(int cityCode) {
-        try {
-            String token = getToken();
+        CdekDeliveryPoint[] response = withRetry("getDeliveryPoints", () ->
+                restTemplate.exchange(
+                        properties.getUrl() + "/deliverypoints?city_code=" + cityCode,
+                        HttpMethod.GET,
+                        new HttpEntity<>(authHeaders()),
+                        CdekDeliveryPoint[].class).getBody());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
-
-            log.info("Запрос списка ПВЗ CDEK для города: {}", cityCode);
-
-            CdekDeliveryPoint[] response = restTemplate.exchange(
-                    properties.getUrl() + "/deliverypoints?city_code=" + cityCode,
-                    org.springframework.http.HttpMethod.GET,
-                    entity,
-                    CdekDeliveryPoint[].class
-            ).getBody();
-
-            if (response == null) {
-                throw new IllegalStateException("CDEK не вернул список ПВЗ");
-            }
-
-            log.info("Получено ПВЗ от CDEK: {}", response.length);
-            return Arrays.asList(response);
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен при запросе ПВЗ: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
-        }
+        if (response == null) throw new IllegalStateException("CDEK не вернул список ПВЗ");
+        return Arrays.asList(response);
     }
 
-    // Шаг 4: Расчёт конкретного тарифа (с опциональной страховкой)
-    public CdekTariffResponse calculateSingleTariff(List<ShipmentPackage> items, ShipmentParams params, Double insuranceAmount) {
-        int fromCityCode = properties.getFromCityCode();
-        int toCityCode   = params.getToCityCode();
-        int tariffCode   = params.getTariffCode()   > 0 ? params.getTariffCode()   : properties.getTariffCode();
+    // ─── Cities ───────────────────────────────────────────────────────────────
 
-        try {
-            String token = getToken();
-
-            List<CdekTariffRequest.Package> packages = items.stream()
-                    .flatMap(item -> {
-                        int weightGrams = (int) Math.max(100, Math.round(item.getWeightKg() * 1000));
-                        CdekTariffRequest.Package pkg = new CdekTariffRequest.Package(
-                                weightGrams,
-                                (int) Math.max(1, item.getLengthCm()),
-                                (int) Math.max(1, item.getWidthCm()),
-                                (int) Math.max(1, item.getHeightCm()));
-                        return java.util.Collections.nCopies(item.getQuantity(), pkg).stream();
-                    })
-                    .toList();
-
-            List<CdekTariffRequest.Service> services = insuranceAmount != null && insuranceAmount > 0
-                    ? List.of(new CdekTariffRequest.Service("INSURANCE", String.valueOf(insuranceAmount.intValue())))
-                    : null;
-
-            CdekTariffRequest request = CdekTariffRequest.builder()
-                    .tariffCode(tariffCode)
-                    .fromLocation(new CdekTariffRequest.Location(fromCityCode))
-                    .toLocation(new CdekTariffRequest.Location(toCityCode))
-                    .packages(packages)
-                    .services(services)
-                    .build();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<CdekTariffRequest> entity = new HttpEntity<>(request, headers);
-
-            log.info("Расчёт тарифа CDEK #{}, страховка: {}", tariffCode, insuranceAmount);
-
-            CdekTariffResponse response = restTemplate.postForObject(
-                    properties.getUrl() + "/calculator/tariff",
-                    entity,
-                    CdekTariffResponse.class
-            );
-
-            if (response == null) {
-                throw new IllegalStateException("CDEK не вернул ответ на расчёт тарифа");
-            }
-
-            return response;
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
-        }
-    }
-
-    // Шаг 5: Создание заказа
-    public CdekOrderApiResponse createOrder(CdekOrderApiRequest orderRequest) {
-        try {
-            String token = getToken();
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<CdekOrderApiRequest> entity = new HttpEntity<>(orderRequest, headers);
-
-            log.info("Создание заказа CDEK, тариф: {}", orderRequest.getTariffCode());
-
-            CdekOrderApiResponse response = restTemplate.postForObject(
-                    properties.getUrl() + "/orders",
-                    entity,
-                    CdekOrderApiResponse.class
-            );
-
-            if (response == null || response.getEntity() == null) {
-                throw new IllegalStateException("CDEK не вернул ответ при создании заказа");
-            }
-
-            log.info("Заказ CDEK создан, UUID: {}", response.getEntity().getUuid());
-            return response;
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен при создании заказа: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
-        }
-    }
-
-    // Поиск городов CDEK по названию
     public List<CdekCity> searchCities(String name) {
-        try {
-            String token = getToken();
+        CdekCity[] response = withRetry("searchCities", () ->
+                restTemplate.exchange(
+                        properties.getUrl() + "/location/cities?city=" + name,
+                        HttpMethod.GET,
+                        new HttpEntity<>(authHeaders()),
+                        CdekCity[].class).getBody());
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.setBearerAuth(token);
+        return response != null ? Arrays.asList(response) : List.of();
+    }
 
-            HttpEntity<Void> entity = new HttpEntity<>(headers);
+    // ─── Orders ───────────────────────────────────────────────────────────────
 
-            log.info("Поиск городов CDEK: '{}'", name);
+    public CdekOrderApiResponse createOrder(CdekOrderApiRequest orderRequest) {
+        log.info("Создание заказа CDEK, тариф: {}", orderRequest.getTariffCode());
 
-            CdekCity[] response = restTemplate.exchange(
-                    properties.getUrl() + "/location/cities?city=" + name,
-                    org.springframework.http.HttpMethod.GET,
-                    entity,
-                    CdekCity[].class
-            ).getBody();
+        CdekOrderApiResponse response = withRetry("createOrder", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/orders",
+                        new HttpEntity<>(orderRequest, authJsonHeaders()),
+                        CdekOrderApiResponse.class));
 
-            if (response == null) {
-                return List.of();
-            }
-
-            return Arrays.asList(response);
-
-        } catch (RestClientException e) {
-            log.error("CDEK API недоступен при поиске городов: {}", e.getMessage());
-            throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже");
+        if (response == null || response.getEntity() == null) {
+            throw new IllegalStateException("CDEK не вернул ответ при создании заказа");
         }
+
+        String state = extractState(response);
+        if ("INVALID".equals(state) && response.getRequests() != null) {
+            response.getRequests().stream()
+                    .filter(r -> r.getErrors() != null)
+                    .flatMap(r -> r.getErrors().stream())
+                    .forEach(e -> log.error("CDEK ошибка создания заказа: [{}] {}", e.getCode(), e.getMessage()));
+            throw new IllegalStateException("CDEK отклонил заказ: " +
+                    response.getRequests().get(0).getErrors().get(0).getMessage());
+        }
+
+        log.info("Заказ CDEK uuid={}, status={}", response.getEntity().getUuid(), state);
+        return response;
+    }
+
+    public CdekOrderApiResponse getOrderStatus(String uuid) {
+        log.info("Проверка статуса CDEK заказа uuid={}", uuid);
+
+        CdekOrderApiResponse response = withRetry("getOrderStatus", () ->
+                restTemplate.exchange(
+                        properties.getUrl() + "/orders/" + uuid,
+                        HttpMethod.GET,
+                        new HttpEntity<>(authHeaders()),
+                        CdekOrderApiResponse.class).getBody());
+
+        if (response == null) throw new IllegalStateException("CDEK не вернул статус для uuid=" + uuid);
+        return response;
+    }
+
+    public void cancelOrder(String uuid) {
+        log.info("Отмена заказа CDEK uuid={}", uuid);
+        withRetry("cancelOrder", () -> {
+            restTemplate.exchange(
+                    properties.getUrl() + "/orders/" + uuid,
+                    HttpMethod.DELETE,
+                    new HttpEntity<>(authHeaders()),
+                    Void.class);
+            return null;
+        });
+    }
+
+    public CdekOrderApiResponse refuseOrder(String uuid) {
+        log.info("Регистрация отказа от заказа CDEK uuid={}", uuid);
+        CdekOrderApiResponse response = withRetry("refuseOrder", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/orders/" + uuid + "/refusal",
+                        new HttpEntity<>(authJsonHeaders()),
+                        CdekOrderApiResponse.class));
+        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на отказ");
+        return response;
+    }
+
+    public CdekOrderApiResponse clientReturn(String uuid, int tariffCode) {
+        log.info("Клиентский возврат CDEK uuid={}, тариф={}", uuid, tariffCode);
+        var body = new java.util.HashMap<String, Integer>();
+        body.put("tariff_code", tariffCode);
+        CdekOrderApiResponse response = withRetry("clientReturn", () ->
+                restTemplate.postForObject(
+                        properties.getUrl() + "/orders/" + uuid + "/clientReturn",
+                        new HttpEntity<>(body, authJsonHeaders()),
+                        CdekOrderApiResponse.class));
+        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на возврат");
+        return response;
+    }
+
+    // ─── Private ──────────────────────────────────────────────────────────────
+
+    private List<CdekTariffRequest.Package> buildTariffPackages(List<ShipmentPackage> items) {
+        return items.stream()
+                .flatMap(item -> {
+                    int wg = (int) Math.max(100, Math.round(item.getWeightKg() * 1000));
+                    var pkg = new CdekTariffRequest.Package(wg,
+                            (int) Math.max(1, item.getLengthCm()),
+                            (int) Math.max(1, item.getWidthCm()),
+                            (int) Math.max(1, item.getHeightCm()));
+                    return Collections.nCopies(item.getQuantity(), pkg).stream();
+                })
+                .toList();
+    }
+
+    private String extractState(CdekOrderApiResponse response) {
+        if (response.getRequests() != null && !response.getRequests().isEmpty()) {
+            return response.getRequests().get(0).getState();
+        }
+        return "UNKNOWN";
     }
 }

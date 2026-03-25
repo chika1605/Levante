@@ -1,5 +1,6 @@
 package kg.example.levantee.controller;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import kg.example.levantee.dto.shipmentDto.ShipmentCreateResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentRequest;
@@ -27,7 +28,7 @@ public class ShipmentController {
     private final ShipmentService shipmentService;
 
     @PostMapping
-    public ResponseEntity<ShipmentCreateResponse> createShipment(@RequestBody ShipmentRequest request) {
+    public ResponseEntity<ShipmentCreateResponse> createShipment(@Valid @RequestBody ShipmentRequest request) {
         return ResponseEntity.ok(shipmentService.createShipment(request));
     }
 
@@ -40,8 +41,8 @@ public class ShipmentController {
     @GetMapping("/calculate")
     public ResponseEntity<ShipmentResponse> calculate(
             @RequestParam @Positive(message = "ID заказа должен быть положительным") Long orderId,
-            @RequestParam String tariffId) {
-        return ResponseEntity.ok(shipmentService.calculate(orderId, tariffId));
+            @RequestParam String tariffId,
+            @RequestParam(defaultValue = "false") boolean insuranceEnabled) {
+        return ResponseEntity.ok(shipmentService.calculate(orderId, tariffId, insuranceEnabled));
     }
-
 }

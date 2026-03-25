@@ -39,6 +39,21 @@ public class Shipment {
 
     private String deliveryAddress; // адрес (DOOR) или код ПВЗ (WAREHOUSE)
 
+    private Integer tariffCode;
+    private String tariffName;
+
+    private Double deliveryPrice;
+    private Double insurancePrice;
+    private Double calculatedPrice;  // фиксируется навсегда на момент оформления
+    private Double declaredValue;
+
+    // CDEK async tracking
+    private String cdekUuid;            // entity.uuid из ответа CDEK
+    private String cdekNumber;          // номер для клиента (приходит после SUCCESSFUL)
+    private String cdekStatus;          // статус из CDEK (Создан / В пути / Вручен)
+    private String cdekRequestStatus;   // ACCEPTED → SUCCESSFUL / INVALID
+    private int cdekPollAttempts;       // счётчик попыток опроса статуса
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 

@@ -49,4 +49,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
         WHERE oi.order_id = :orderId
         """, nativeQuery = true)
     List<ShipmentPackageProjection> findShipmentPackages(@Param("orderId") Long orderId);
+
+    @Query("SELECT SUM(oi.totalPrice) FROM OrderItem oi WHERE oi.order.id = :orderId")
+    Double findTotalAmountByOrderId(@Param("orderId") Long orderId);
 }

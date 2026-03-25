@@ -1,6 +1,7 @@
 package kg.example.levantee.controller;
 
 import jakarta.validation.Valid;
+import kg.example.levantee.dto.orderDto.OrderDetailResponse;
 import kg.example.levantee.dto.orderDto.OrderRequest;
 import kg.example.levantee.dto.orderDto.OrderResponse;
 import kg.example.levantee.dto.orderDto.OrderSummaryResponse;
@@ -32,5 +33,10 @@ public class OrderController {
     public ResponseEntity<Page<OrderSummaryResponse>> getAll(
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(orderService.getAll(pageable));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<OrderDetailResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.getById(id));
     }
 }

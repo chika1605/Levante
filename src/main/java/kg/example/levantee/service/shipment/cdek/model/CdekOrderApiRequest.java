@@ -12,6 +12,8 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CdekOrderApiRequest {
 
+    private int type; // 2 = доставка
+
     @JsonProperty("tariff_code")
     private int tariffCode;
 
@@ -21,9 +23,11 @@ public class CdekOrderApiRequest {
     @JsonProperty("to_location")
     private Location toLocation;
 
+    private Sender sender;
+
     private Recipient recipient;
 
-    private List<CdekTariffRequest.Package> packages;
+    private List<Package> packages;
 
     private List<CdekTariffRequest.Service> services;
 
@@ -31,8 +35,9 @@ public class CdekOrderApiRequest {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Location {
-        private Integer code;       // код города (для DOOR — город назначения)
-        private String address;     // адрес (для DOOR)
+        private Integer code;       // код города
+        private String city;        // название города
+        private String address;     // улица и дом
 
         @JsonProperty("postal_code")
         private String postalCode;
@@ -41,26 +46,52 @@ public class CdekOrderApiRequest {
             return Location.builder().code(cityCode).build();
         }
 
-        public static Location ofDeliveryPoint(String deliveryPointCode) {
-            // ПВЗ передаётся через поле code на уровне заказа
-            return Location.builder().code(null).address(deliveryPointCode).build();
+        // DOOR — код города + адрес
+        public static Location ofCityAndAddress(int cityCode, String address) {
+            return Location.builder().code(cityCode).address(address).build();
         }
 
-        public static Location ofAddress(String address) {
-            return Location.builder().address(address).build();
+        // WAREHOUSE — код ПВЗ
+        public static Location ofDeliveryPoint(String deliveryPointCode) {
+            return Location.builder().address(deliveryPointCode).build();
         }
     }
 
     @Data
     @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Sender {
+        private String name;
+        private String company;
+        private List<Recipient.Phone> phones;
+        private String email;
+    }
+
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Recipient {
         private String name;
         private List<Phone> phones;
+        private String email;
 
         @Data
         @Builder
         public static class Phone {
             private String number;
         }
+    }
+
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class Package {
+        private String number;   // порядковый номер места (1, 2, ...)
+        private String comment;  // комментарий к месту
+        private int weight;      // в граммах
+        private int length;      // в см
+        private int width;       // в см
+        private int height;      // в см
+        private List<Object> items;
     }
 }

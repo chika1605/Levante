@@ -17,6 +17,19 @@ public class CdekOrderApiResponse {
 
         @JsonProperty("cdek_number")
         private String cdekNumber;
+
+        private List<Status> statuses;
+
+        @Data
+        public static class Status {
+            private String code;
+            private String name;
+        }
+
+        public String getCurrentStatusName() {
+            if (statuses == null || statuses.isEmpty()) return null;
+            return statuses.get(0).getName();
+        }
     }
 
     @Data
