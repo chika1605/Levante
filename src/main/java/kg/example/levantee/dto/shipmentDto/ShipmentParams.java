@@ -1,11 +1,11 @@
-package kg.example.levantee.service.shipment.dto;
+package kg.example.levantee.dto.shipmentDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class CdekParams {
+public class ShipmentParams {
     private int fromCityCode;
     private int toCityCode;
     private int tariffCode;

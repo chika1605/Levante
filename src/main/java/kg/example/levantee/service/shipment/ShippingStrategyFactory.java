@@ -23,7 +23,7 @@ public class ShippingStrategyFactory {
         return List.copyOf(strategies.values());
     }
 
-    public ShippingStrategy create(String carrierCode) {
+    public ShippingStrategy get(String carrierCode) {
         if (carrierCode == null || carrierCode.isBlank()) {
             throw new IllegalArgumentException("Код службы доставки не может быть пустым");
         }

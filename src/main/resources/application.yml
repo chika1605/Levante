@@ -1,10 +1,9 @@
 cdek:
   api:
     url: https://api.edu.cdek.ru/v2
-    client-id: ${CDEK_CLIENT_ID}
-    client-secret: ${CDEK_CLIENT_SECRET}
-    from-city-code: 270
-    to-city-code: 44
+    client-id: wqGwiQx0gg8mLtiEKsUinjVSICCjtTEP
+    client-secret: RmAmgvSgSl1yirlz9QupbzOJVqhCxcP5
+    from-city-code: 5444
     tariff-code: 136
 
 yildam:

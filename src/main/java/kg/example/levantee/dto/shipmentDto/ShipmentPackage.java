@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.dto;
+package kg.example.levantee.dto.shipmentDto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

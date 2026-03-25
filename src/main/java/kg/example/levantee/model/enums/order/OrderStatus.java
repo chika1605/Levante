@@ -1,9 +1,11 @@
 package kg.example.levantee.model.enums.order;
 
 public enum OrderStatus {
-    PENDING((short) 1),
-    PAID((short) 2),
-    CANCELLED((short) 3);
+    CART((short) 1),
+    PENDING((short) 2),
+    PAID((short) 3),
+    CANCELLED((short) 4),
+    SHIPPED((short) 5);
 
     public final short id;
 

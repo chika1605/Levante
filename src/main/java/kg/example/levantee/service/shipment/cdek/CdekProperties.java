@@ -12,6 +12,5 @@ public class CdekProperties {
     private String clientId;
     private String clientSecret;
     private int fromCityCode;
-    private int toCityCode;
     private int tariffCode;
 }

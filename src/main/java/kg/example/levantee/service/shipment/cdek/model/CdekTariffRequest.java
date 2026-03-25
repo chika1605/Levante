@@ -1,5 +1,6 @@
-package kg.example.levantee.service.shipment.cdek.dto;
+package kg.example.levantee.service.shipment.cdek.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,10 +10,13 @@ import java.util.List;
 
 @Data
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CdekTariffRequest {
 
     @JsonProperty("tariff_code")
-    private int tariffCode;
+    private Integer tariffCode;
+
+    private String date;
 
     @JsonProperty("from_location")
     private Location fromLocation;
@@ -22,10 +26,19 @@ public class CdekTariffRequest {
 
     private List<Package> packages;
 
+    private List<Service> services;
+
     @Data
     @AllArgsConstructor
     public static class Location {
         private int code;
+    }
+
+    @Data
+    @AllArgsConstructor
+    public static class Service {
+        private String code;
+        private String parameter;
     }
 
     @Data

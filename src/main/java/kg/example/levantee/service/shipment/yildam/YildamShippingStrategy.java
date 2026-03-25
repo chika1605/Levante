@@ -1,9 +1,9 @@
-package kg.example.levantee.service.shipment.impl;
+package kg.example.levantee.service.shipment.yildam;
 
+import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
+import kg.example.levantee.dto.shipmentDto.ShipmentParams;
+import kg.example.levantee.dto.shipmentDto.TariffInfo;
 import kg.example.levantee.service.shipment.ShippingStrategy;
-import kg.example.levantee.service.shipment.dto.CdekParams;
-import kg.example.levantee.service.shipment.dto.ShipmentPackage;
-import kg.example.levantee.service.shipment.yildam.YildamProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +14,15 @@ import java.util.List;
 public class YildamShippingStrategy implements ShippingStrategy {
 
     private final YildamProperties properties;
+    private final YildamService yildamService;
 
     @Override
-    public double calculate(List<ShipmentPackage> packages, CdekParams cdekParams) {
+    public String getCarrierName() {
+        return "YILDAM";
+    }
+
+    @Override
+    public double calculate(List<ShipmentPackage> packages, ShipmentParams params) {
         double totalWeight = packages.stream()
                 .mapToDouble(p -> p.getWeightKg() * p.getQuantity())
                 .sum();
@@ -28,7 +34,7 @@ public class YildamShippingStrategy implements ShippingStrategy {
     }
 
     @Override
-    public String getCarrierName() {
-        return "YILDAM";
+    public List<TariffInfo> getTariffs(int toCityCode) {
+        return yildamService.getTariffs(toCityCode);
     }
 }

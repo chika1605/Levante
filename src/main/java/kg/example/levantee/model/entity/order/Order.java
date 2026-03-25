@@ -45,7 +45,7 @@ public class Order {
 
     @PrePersist
     public void prePersist() {
-        this.status = OrderStatus.PENDING;
+        this.status = OrderStatus.CART;
         this.orderedDate = LocalDateTime.now();
     }
 

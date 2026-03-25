@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.cdek.dto;
+package kg.example.levantee.service.shipment.cdek.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
