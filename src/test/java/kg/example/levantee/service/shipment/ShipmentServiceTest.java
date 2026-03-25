@@ -1,6 +1,5 @@
 package kg.example.levantee.service.shipment;
 
-import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentRequest;
 import kg.example.levantee.dto.shipmentDto.ShipmentResponse;
 import kg.example.levantee.model.entity.order.Order;
@@ -9,9 +8,9 @@ import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.model.entity.shipment.ShipmentPackageProjection;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ShipmentRepository;
-import kg.example.levantee.service.shipment.cdek.CdekClient;
-import kg.example.levantee.service.shipment.cdek.CdekProperties;
-import kg.example.levantee.service.shipment.cdek.CdekService;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
+import kg.example.levantee.service.shipment.cdek.service.CdekService;
 import kg.example.levantee.utils.exception.PriceChangedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

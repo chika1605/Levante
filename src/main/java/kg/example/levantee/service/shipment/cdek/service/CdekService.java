@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.cdek;
+package kg.example.levantee.service.shipment.cdek.service;
 
 import kg.example.levantee.dto.CityDto;
 import kg.example.levantee.dto.cdekDto.CdekCalculateRequest;
@@ -8,6 +8,8 @@ import kg.example.levantee.dto.cdekDto.CdekCreateOrderResponse;
 import kg.example.levantee.dto.cdekDto.DeliveryPointDto;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiRequest;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffListResponse;
@@ -50,29 +52,6 @@ public class CdekService {
                 .map(c -> new CityDto(c.getCode(), c.getCity(), c.getRegion(), c.getCountryCode()))
                 .toList();
     }
-
-    public List<DeliveryPointDto> getDeliveryPoints(int cityCode) {
-        return cdekClient.getDeliveryPoints(cityCode).stream()
-                .map(p -> new DeliveryPointDto(
-                        p.getCode(), p.getName(), p.getType(),
-                        p.getLocation() != null ? p.getLocation().getAddress() : null,
-                        p.getWorkTime()))
-                .toList();
-    }
-
-
-    public CdekCalculateResponse calculateSingleTariff(CdekCalculateRequest request) {
-        ShipmentParams params = new ShipmentParams(
-                request.getFromCityCode(), request.getToCityCode(), request.getTariffCode());
-
-        CdekTariffResponse response = cdekClient.calculateSingleTariff(
-                request.getPackages(), params, request.getInsuranceAmount());
-
-        return new CdekCalculateResponse(
-                response.getTotalSum(), response.getCurrency(),
-                response.getPeriodMin(), response.getPeriodMax());
-    }
-
 
     public CdekCreateOrderResponse createOrder(CdekCreateOrderRequest request) {
         boolean isWarehouse = request.getDeliveryPoint() != null && !request.getDeliveryPoint().isBlank();

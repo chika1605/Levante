@@ -1,5 +1,6 @@
-package kg.example.levantee.service.shipment.cdek;
+package kg.example.levantee.service.shipment.cdek.client;
 
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.model.CdekCity;
 import kg.example.levantee.service.shipment.cdek.model.CdekDeliveryPoint;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiRequest;
@@ -10,6 +11,7 @@ import kg.example.levantee.service.shipment.cdek.model.CdekTariffResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 
+import kg.example.levantee.service.shipment.cdek.service.CdekAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -112,34 +114,6 @@ public class CdekClient {
         return response.getTotalSum();
     }
 
-    public CdekTariffResponse calculateSingleTariff(List<ShipmentPackage> items, ShipmentParams params,
-                                                     Double insuranceAmount) {
-        int fromCityCode = properties.getFromCityCode();
-        int toCityCode   = params.getToCityCode();
-        int tariffCode   = params.getTariffCode() > 0 ? params.getTariffCode() : properties.getTariffCode();
-
-        List<CdekTariffRequest.Package> packages = buildTariffPackages(items);
-        List<CdekTariffRequest.Service> services = insuranceAmount != null && insuranceAmount > 0
-                ? List.of(new CdekTariffRequest.Service("INSURANCE", String.valueOf(insuranceAmount.intValue())))
-                : null;
-
-        CdekTariffRequest request = CdekTariffRequest.builder()
-                .tariffCode(tariffCode)
-                .fromLocation(new CdekTariffRequest.Location(fromCityCode))
-                .toLocation(new CdekTariffRequest.Location(toCityCode))
-                .packages(packages)
-                .services(services)
-                .build();
-
-        CdekTariffResponse response = withRetry("calculateSingleTariff", () ->
-                restTemplate.postForObject(
-                        properties.getUrl() + "/calculator/tariff",
-                        new HttpEntity<>(request, authJsonHeaders()),
-                        CdekTariffResponse.class));
-
-        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на расчёт тарифа");
-        return response;
-    }
 
     public CdekTariffListResponse getTariffList(int toCityCode) {
         CdekTariffRequest request = CdekTariffRequest.builder()

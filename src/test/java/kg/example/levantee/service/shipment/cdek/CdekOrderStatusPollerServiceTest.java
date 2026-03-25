@@ -2,7 +2,9 @@ package kg.example.levantee.service.shipment.cdek;
 
 import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.repository.ShipmentRepository;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
+import kg.example.levantee.service.shipment.cdek.service.CdekOrderStatusPollerService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,10 +21,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CdekOrderStatusPollerServiceTest {
 
-    @Mock CdekClient cdekClient;
+    @Mock
+    CdekClient cdekClient;
     @Mock ShipmentRepository shipmentRepository;
 
-    @InjectMocks CdekOrderStatusPollerService poller;
+    @InjectMocks
+    CdekOrderStatusPollerService poller;
 
     // ── SUCCESSFUL ────────────────────────────────────────────────────────────
 

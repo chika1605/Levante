@@ -3,6 +3,7 @@ package kg.example.levantee.service.shipment;
 import jakarta.transaction.Transactional;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderResponse;
+import kg.example.levantee.dto.mapper.ShipmentMapper;
 import kg.example.levantee.dto.shipmentDto.ShipmentCreateResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
@@ -14,9 +15,9 @@ import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ShipmentRepository;
-import kg.example.levantee.service.shipment.cdek.CdekClient;
-import kg.example.levantee.service.shipment.cdek.CdekProperties;
-import kg.example.levantee.service.shipment.cdek.CdekService;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
+import kg.example.levantee.service.shipment.cdek.service.CdekService;
 import kg.example.levantee.utils.exception.NotFoundException;
 import kg.example.levantee.utils.exception.PriceChangedException;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class ShipmentService {
     private final CdekService cdekService;
     private final CdekClient cdekClient;
     private final CdekProperties cdekProperties;
+    private final ShipmentMapper shipmentMapper;
 
 
     public List<TariffInfo> getTariffs(int toCityCode) {
@@ -96,38 +98,20 @@ public class ShipmentService {
         double freshDelivery  = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
         ShipmentPriceCacheService.Entry cached = priceCacheService.get(request.getOrderId());
         boolean insuranceEnabled = cached != null && cached.isInsuranceEnabled();
-        Double totalAmount = orderRepository.findTotalAmountByOrderId(request.getOrderId());
+        Double totalAmount    = orderRepository.findTotalAmountByOrderId(request.getOrderId());
         double declaredValue  = (insuranceEnabled && totalAmount != null) ? totalAmount : 0.0;
         double freshInsurance = insuranceEnabled ? Math.round(declaredValue * 0.01 * 100.0) / 100.0 : 0.0;
         double freshTotal     = freshDelivery + freshInsurance;
 
         if (cached != null && Math.abs(cached.getTotalPrice() - freshTotal) > 0.01) {
-            priceCacheService.save(request.getOrderId(), freshDelivery, freshInsurance,
-                    freshTotal, declaredValue, insuranceEnabled, tariffCode);
+            priceCacheService.save(request.getOrderId(), freshDelivery, freshInsurance, freshTotal, declaredValue, insuranceEnabled, tariffCode);
             throw new PriceChangedException(cached.getTotalPrice(), freshTotal);
         }
 
-        CdekCreateOrderRequest cdekReq = buildCdekRequest(request, packages, tariffCode, toCityCode, freshInsurance);
-        CdekCreateOrderResponse cdekResponse = cdekService.createOrder(cdekReq);
+        CdekCreateOrderRequest cdekRequest = shipmentMapper.toCdekRequest(request, packages, tariffCode, toCityCode, freshInsurance, cdekProperties.getFromCityCode());
+        CdekCreateOrderResponse cdekResponse = cdekService.createOrder(cdekRequest);
 
-        Shipment shipment = Shipment.builder()
-                .order(order)
-                .carrier(carrier)
-                .tariffId(request.getTariffId())
-                .tariffCode(tariffCode)
-                .tariffName(request.getTariffName())
-                .recipientName(request.getRecipientName())
-                .recipientPhone(request.getRecipientPhone())
-                .deliveryAddress(request.getDeliveryAddress())
-                .deliveryPrice(freshDelivery)
-                .insurancePrice(freshInsurance)
-                .calculatedPrice(freshTotal)
-                .declaredValue(declaredValue)
-                .cdekUuid(cdekResponse.getUuid())
-                .cdekRequestStatus(cdekResponse.getStatus())
-                .cdekPollAttempts(0)
-                .build();
-
+        Shipment shipment = shipmentMapper.toEntity(order, request, carrier, tariffCode, freshDelivery, freshInsurance, freshTotal, declaredValue, cdekResponse);
         shipmentRepository.save(shipment);
 
         order.setStatus(OrderStatus.PENDING);
@@ -135,13 +119,10 @@ public class ShipmentService {
 
         priceCacheService.delete(request.getOrderId());
 
-        log.info("Доставка оформлена: shipment={}, cdekUuid={}, price={}", shipment.getId(), cdekResponse.getUuid(), freshTotal);
+        log.info("Доставка оформлена: shipmentId={}, cdekUuid={}, price={}", shipment.getId(), cdekResponse.getUuid(), freshTotal);
 
-        return new ShipmentCreateResponse(shipment.getId(), order.getId(), carrier,
-                request.getTariffId(), order.getStatus(),
-                cdekResponse.getUuid(), cdekResponse.getStatus(), freshTotal);
+        return shipmentMapper.toCreateResponse(shipment, cdekResponse, freshTotal);
     }
-
 
     @Transactional
     public void cancelShipment(String cdekUuid) {
@@ -149,8 +130,7 @@ public class ShipmentService {
                 .orElseThrow(() -> new NotFoundException("Доставка не найдена: " + cdekUuid));
 
         if (!"Создан".equals(shipment.getCdekStatus())) {
-            throw new IllegalArgumentException(
-                    "Отмена возможна только для статуса 'Создан'. Текущий: " + shipment.getCdekStatus());
+            throw new IllegalArgumentException("Отмена возможна только для статуса 'Создан'. Текущий: " + shipment.getCdekStatus());
         }
 
         cdekClient.cancelOrder(cdekUuid);
@@ -160,35 +140,6 @@ public class ShipmentService {
 
         log.info("Заказ cdekUuid={} отменён", cdekUuid);
     }
-
-
-    public void refuseShipment(String cdekUuid) {
-        Shipment shipment = shipmentRepository.findByCdekUuid(cdekUuid)
-                .orElseThrow(() -> new NotFoundException("Доставка не найдена: " + cdekUuid));
-
-        if ("Создан".equals(shipment.getCdekStatus())) {
-            throw new IllegalArgumentException(
-                    "Для статуса 'Создан' используйте DELETE /shipment/{cdekUuid}");
-        }
-
-        cdekClient.refuseOrder(cdekUuid);
-        log.info("Отказ от заказа cdekUuid={} зарегистрирован", cdekUuid);
-    }
-
-
-    public void returnShipment(String cdekUuid, int returnTariffCode) {
-        Shipment shipment = shipmentRepository.findByCdekUuid(cdekUuid)
-                .orElseThrow(() -> new NotFoundException("Доставка не найдена: " + cdekUuid));
-
-        if (!"Вручен".equals(shipment.getCdekStatus())) {
-            throw new IllegalArgumentException(
-                    "Возврат возможен только для статуса 'Вручен'. Текущий: " + shipment.getCdekStatus());
-        }
-
-        cdekClient.clientReturn(cdekUuid, returnTariffCode);
-        log.info("Возврат cdekUuid={} инициирован", cdekUuid);
-    }
-
 
     private String[] parseTariffId(String tariffId) {
         String[] parts = tariffId.split(":");
@@ -202,30 +153,5 @@ public class ShipmentService {
                 .toList();
         if (packages.isEmpty()) throw new IllegalStateException("Заказ не содержит товаров");
         return packages;
-    }
-
-    private CdekCreateOrderRequest buildCdekRequest(ShipmentRequest req, List<ShipmentPackage> packages,
-                                                     int tariffCode, int toCityCode, double insuranceAmount) {
-        boolean isPvz = req.getDeliveryAddress() != null
-                && !req.getDeliveryAddress().isBlank()
-                && !req.getDeliveryAddress().contains(" ");
-
-        CdekCreateOrderRequest r = new CdekCreateOrderRequest();
-        r.setOrderId(req.getOrderId());
-        r.setTariffCode(tariffCode);
-        r.setFromCityCode(cdekProperties.getFromCityCode());
-        r.setToCityCode(toCityCode);
-        r.setRecipientName(req.getRecipientName());
-        r.setRecipientPhone(req.getRecipientPhone());
-        r.setRecipientEmail(req.getRecipientEmail());
-        r.setPackages(packages);
-        r.setInsuranceAmount(insuranceAmount > 0 ? insuranceAmount : null);
-
-        if (isPvz) {
-            r.setDeliveryPoint(req.getDeliveryAddress());
-        } else {
-            r.setToAddress(req.getDeliveryAddress());
-        }
-        return r;
     }
 }

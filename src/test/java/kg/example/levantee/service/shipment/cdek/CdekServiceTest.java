@@ -3,8 +3,11 @@ package kg.example.levantee.service.shipment.cdek;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiRequest;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
+import kg.example.levantee.service.shipment.cdek.service.CdekService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,10 +25,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CdekServiceTest {
 
-    @Mock CdekClient cdekClient;
-    @Mock CdekProperties cdekProperties;
+    @Mock
+    CdekClient cdekClient;
+    @Mock
+    CdekProperties cdekProperties;
 
-    @InjectMocks CdekService service;
+    @InjectMocks
+    CdekService service;
 
     @BeforeEach
     void setup() {

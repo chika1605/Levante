@@ -1,5 +1,6 @@
-package kg.example.levantee.service.shipment.cdek;
+package kg.example.levantee.service.shipment.cdek.service;
 
+import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.model.CdekTokenResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

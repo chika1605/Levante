@@ -1,9 +1,11 @@
-package kg.example.levantee.service.shipment.cdek;
+package kg.example.levantee.service.shipment.cdek.strategy;
 
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
 import kg.example.levantee.service.shipment.ShippingStrategy;
+import kg.example.levantee.service.shipment.cdek.client.CdekClient;
+import kg.example.levantee.service.shipment.cdek.service.CdekService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
