@@ -26,10 +26,10 @@ public class Shipment {
     private Order order;
 
     @Column(nullable = false)
-    private String carrier;         // CDEK / YILDAM
+    private String carrier;
 
     @Column(nullable = false)
-    private String tariffId;        // "CDEK:136:270"
+    private String tariffId;
 
     @Column(nullable = false)
     private String recipientName;
@@ -37,22 +37,21 @@ public class Shipment {
     @Column(nullable = false)
     private String recipientPhone;
 
-    private String deliveryAddress; // адрес (DOOR) или код ПВЗ (WAREHOUSE)
+    private String deliveryAddress;
 
     private Integer tariffCode;
     private String tariffName;
 
     private Double deliveryPrice;
     private Double insurancePrice;
-    private Double calculatedPrice;  // фиксируется навсегда на момент оформления
+    private Double calculatedPrice;
     private Double declaredValue;
 
-    // CDEK async tracking
-    private String cdekUuid;            // entity.uuid из ответа CDEK
-    private String cdekNumber;          // номер для клиента (приходит после SUCCESSFUL)
-    private String cdekStatus;          // статус из CDEK (Создан / В пути / Вручен)
-    private String cdekRequestStatus;   // ACCEPTED → SUCCESSFUL / INVALID
-    private int cdekPollAttempts;       // счётчик попыток опроса статуса
+    private String cdekUuid;
+    private String cdekNumber;
+    private String cdekStatus;
+    private String cdekRequestStatus;
+    private int cdekPollAttempts;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

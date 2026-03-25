@@ -11,5 +11,5 @@ public class CdekCalculateRequest {
     private int toCityCode;
     private int tariffCode;
     private List<ShipmentPackage> packages;
-    private Double insuranceAmount; // null = без страховки
+    private Double insuranceAmount;
 }

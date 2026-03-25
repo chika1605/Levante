@@ -12,7 +12,7 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class CdekOrderApiRequest {
 
-    private int type; // 2 = доставка
+    private int type;
 
     @JsonProperty("tariff_code")
     private int tariffCode;
@@ -35,9 +35,9 @@ public class CdekOrderApiRequest {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Location {
-        private Integer code;       // код города
-        private String city;        // название города
-        private String address;     // улица и дом
+        private Integer code;
+        private String city;
+        private String address;
 
         @JsonProperty("postal_code")
         private String postalCode;
@@ -46,12 +46,10 @@ public class CdekOrderApiRequest {
             return Location.builder().code(cityCode).build();
         }
 
-        // DOOR — код города + адрес
         public static Location ofCityAndAddress(int cityCode, String address) {
             return Location.builder().code(cityCode).address(address).build();
         }
 
-        // WAREHOUSE — код ПВЗ
         public static Location ofDeliveryPoint(String deliveryPointCode) {
             return Location.builder().address(deliveryPointCode).build();
         }
@@ -86,12 +84,12 @@ public class CdekOrderApiRequest {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Package {
-        private String number;   // порядковый номер места (1, 2, ...)
-        private String comment;  // комментарий к месту
-        private int weight;      // в граммах
-        private int length;      // в см
-        private int width;       // в см
-        private int height;      // в см
+        private String number;
+        private String comment;
+        private int weight;
+        private int length;
+        private int width;
+        private int height;
         private List<Object> items;
     }
 }

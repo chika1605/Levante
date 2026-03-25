@@ -28,7 +28,6 @@ public class CdekService {
     private final CdekClient cdekClient;
     private final CdekProperties properties;
 
-    // ─── Tariffs ──────────────────────────────────────────────────────────────
 
     public List<TariffInfo> getSupportedTariffs(int toCityCode) {
         CdekTariffListResponse response = cdekClient.getTariffList(toCityCode);
@@ -46,8 +45,6 @@ public class CdekService {
                 .toList();
     }
 
-    // ─── Cities / delivery points ─────────────────────────────────────────────
-
     public List<CityDto> searchCities(String name) {
         return cdekClient.searchCities(name).stream()
                 .map(c -> new CityDto(c.getCode(), c.getCity(), c.getRegion(), c.getCountryCode()))
@@ -63,7 +60,6 @@ public class CdekService {
                 .toList();
     }
 
-    // ─── Calculate ────────────────────────────────────────────────────────────
 
     public CdekCalculateResponse calculateSingleTariff(CdekCalculateRequest request) {
         ShipmentParams params = new ShipmentParams(
@@ -77,7 +73,6 @@ public class CdekService {
                 response.getPeriodMin(), response.getPeriodMax());
     }
 
-    // ─── Create order (standalone endpoint) ───────────────────────────────────
 
     public CdekCreateOrderResponse createOrder(CdekCreateOrderRequest request) {
         boolean isWarehouse = request.getDeliveryPoint() != null && !request.getDeliveryPoint().isBlank();

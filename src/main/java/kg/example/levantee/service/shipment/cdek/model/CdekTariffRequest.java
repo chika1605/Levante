@@ -44,9 +44,9 @@ public class CdekTariffRequest {
     @Data
     @AllArgsConstructor
     public static class Package {
-        private int weight; // в граммах
-        private int length; // в см
-        private int width;  // в см
-        private int height; // в см
+        private int weight;
+        private int length;
+        private int width;
+        private int height;
     }
 }

@@ -38,7 +38,6 @@ public class CdekClient {
     private final CdekProperties properties;
     private final CdekAuthService cdekAuthService;
 
-    // ─── Retry ────────────────────────────────────────────────────────────────
 
     private <T> T withRetry(String operation, Supplier<T> call) {
         RestClientException lastException = null;
@@ -46,7 +45,6 @@ public class CdekClient {
             try {
                 return call.get();
             } catch (HttpClientErrorException e) {
-                // 4xx — не ретраим, сразу бросаем с телом ответа
                 log.error("CDEK [{}] ошибка {}: {}", operation, e.getStatusCode(), e.getResponseBodyAsString());
                 throw new IllegalStateException("CDEK вернул ошибку: " + e.getResponseBodyAsString(), e);
             } catch (RestClientException e) {
@@ -66,7 +64,6 @@ public class CdekClient {
         throw new IllegalStateException("Сервис CDEK временно недоступен, попробуйте позже", lastException);
     }
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
 
     private HttpHeaders authHeaders() {
         HttpHeaders h = new HttpHeaders();
@@ -80,7 +77,6 @@ public class CdekClient {
         return h;
     }
 
-    // ─── Tariff calculation ───────────────────────────────────────────────────
 
     public double calculateTariff(List<ShipmentPackage> items, ShipmentParams params) {
         int fromCityCode = properties.getFromCityCode();
@@ -164,7 +160,6 @@ public class CdekClient {
         return response;
     }
 
-    // ─── Delivery points ──────────────────────────────────────────────────────
 
     public List<CdekDeliveryPoint> getDeliveryPoints(int cityCode) {
         CdekDeliveryPoint[] response = withRetry("getDeliveryPoints", () ->
@@ -178,7 +173,6 @@ public class CdekClient {
         return Arrays.asList(response);
     }
 
-    // ─── Cities ───────────────────────────────────────────────────────────────
 
     public List<CdekCity> searchCities(String name) {
         CdekCity[] response = withRetry("searchCities", () ->
@@ -191,7 +185,6 @@ public class CdekClient {
         return response != null ? Arrays.asList(response) : List.of();
     }
 
-    // ─── Orders ───────────────────────────────────────────────────────────────
 
     public CdekOrderApiResponse createOrder(CdekOrderApiRequest orderRequest) {
         log.info("Создание заказа CDEK, тариф: {}", orderRequest.getTariffCode());
@@ -270,7 +263,6 @@ public class CdekClient {
         return response;
     }
 
-    // ─── Private ──────────────────────────────────────────────────────────────
 
     private List<CdekTariffRequest.Package> buildTariffPackages(List<ShipmentPackage> items) {
         return items.stream()

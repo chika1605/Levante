@@ -39,7 +39,6 @@ public class ShipmentService {
     private final CdekClient cdekClient;
     private final CdekProperties cdekProperties;
 
-    // ─── GET /shipment/tariffs ─────────────────────────────────────────────────
 
     public List<TariffInfo> getTariffs(int toCityCode) {
         return shippingStrategyFactory.getAll().stream()
@@ -54,7 +53,6 @@ public class ShipmentService {
                 .toList();
     }
 
-    // ─── GET /shipment/calculate ───────────────────────────────────────────────
 
     public ShipmentResponse calculate(Long orderId, String tariffId, boolean insuranceEnabled) {
         String[] parts = parseTariffId(tariffId);
@@ -78,7 +76,6 @@ public class ShipmentService {
         return new ShipmentResponse(deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled);
     }
 
-    // ─── POST /shipment ────────────────────────────────────────────────────────
 
     @Transactional
     public ShipmentCreateResponse createShipment(ShipmentRequest request) {
@@ -96,7 +93,6 @@ public class ShipmentService {
 
         List<ShipmentPackage> packages = getPackages(request.getOrderId());
 
-        // 1. Свежая цена
         double freshDelivery  = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
         ShipmentPriceCacheService.Entry cached = priceCacheService.get(request.getOrderId());
         boolean insuranceEnabled = cached != null && cached.isInsuranceEnabled();
@@ -105,18 +101,15 @@ public class ShipmentService {
         double freshInsurance = insuranceEnabled ? Math.round(declaredValue * 0.01 * 100.0) / 100.0 : 0.0;
         double freshTotal     = freshDelivery + freshInsurance;
 
-        // 2. Сравниваем с кэшированной ценой из Redis
         if (cached != null && Math.abs(cached.getTotalPrice() - freshTotal) > 0.01) {
             priceCacheService.save(request.getOrderId(), freshDelivery, freshInsurance,
                     freshTotal, declaredValue, insuranceEnabled, tariffCode);
             throw new PriceChangedException(cached.getTotalPrice(), freshTotal);
         }
 
-        // 4. Регистрируем в СДЭК
         CdekCreateOrderRequest cdekReq = buildCdekRequest(request, packages, tariffCode, toCityCode, freshInsurance);
         CdekCreateOrderResponse cdekResponse = cdekService.createOrder(cdekReq);
 
-        // 5. Сохраняем Shipment
         Shipment shipment = Shipment.builder()
                 .order(order)
                 .carrier(carrier)
@@ -137,11 +130,9 @@ public class ShipmentService {
 
         shipmentRepository.save(shipment);
 
-        // 6. Статус заказа → COMPLETED
-        order.setStatus(OrderStatus.COMPLETED);
+        order.setStatus(OrderStatus.PENDING);
         orderRepository.save(order);
 
-        // 7. Удаляем ключ из Redis
         priceCacheService.delete(request.getOrderId());
 
         log.info("Доставка оформлена: shipment={}, cdekUuid={}, price={}", shipment.getId(), cdekResponse.getUuid(), freshTotal);
@@ -151,7 +142,6 @@ public class ShipmentService {
                 cdekResponse.getUuid(), cdekResponse.getStatus(), freshTotal);
     }
 
-    // ─── DELETE /shipment/:cdekUuid ───────────────────────────────────────────
 
     @Transactional
     public void cancelShipment(String cdekUuid) {
@@ -171,7 +161,6 @@ public class ShipmentService {
         log.info("Заказ cdekUuid={} отменён", cdekUuid);
     }
 
-    // ─── POST /shipment/:cdekUuid/refusal ─────────────────────────────────────
 
     public void refuseShipment(String cdekUuid) {
         Shipment shipment = shipmentRepository.findByCdekUuid(cdekUuid)
@@ -186,7 +175,6 @@ public class ShipmentService {
         log.info("Отказ от заказа cdekUuid={} зарегистрирован", cdekUuid);
     }
 
-    // ─── POST /shipment/:cdekUuid/return ──────────────────────────────────────
 
     public void returnShipment(String cdekUuid, int returnTariffCode) {
         Shipment shipment = shipmentRepository.findByCdekUuid(cdekUuid)
@@ -201,7 +189,6 @@ public class ShipmentService {
         log.info("Возврат cdekUuid={} инициирован", cdekUuid);
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────────
 
     private String[] parseTariffId(String tariffId) {
         String[] parts = tariffId.split(":");
@@ -221,7 +208,7 @@ public class ShipmentService {
                                                      int tariffCode, int toCityCode, double insuranceAmount) {
         boolean isPvz = req.getDeliveryAddress() != null
                 && !req.getDeliveryAddress().isBlank()
-                && !req.getDeliveryAddress().contains(" ");  // ПВЗ — короткий код без пробелов
+                && !req.getDeliveryAddress().contains(" ");
 
         CdekCreateOrderRequest r = new CdekCreateOrderRequest();
         r.setOrderId(req.getOrderId());
