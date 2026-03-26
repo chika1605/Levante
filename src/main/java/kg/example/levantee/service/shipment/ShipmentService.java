@@ -15,6 +15,7 @@ import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ShipmentRepository;
+import kg.example.levantee.service.shipment.cdek.ShipmentPriceCacheService;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.CdekService;
 import kg.example.levantee.utils.exception.NotFoundException;

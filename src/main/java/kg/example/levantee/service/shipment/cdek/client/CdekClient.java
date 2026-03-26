@@ -10,7 +10,6 @@ import kg.example.levantee.service.shipment.cdek.model.CdekTariffResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 
-import kg.example.levantee.service.shipment.cdek.CdekAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
