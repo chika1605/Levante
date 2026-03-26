@@ -11,6 +11,10 @@ import kg.example.levantee.repository.ShipmentRepository;
 import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.service.CdekService;
+import kg.example.levantee.service.shipment.factory.ShippingStrategyFactory;
+import kg.example.levantee.service.shipment.service.ShipmentPriceCacheService;
+import kg.example.levantee.service.shipment.service.ShipmentService;
+import kg.example.levantee.service.shipment.strategy.ShippingStrategy;
 import kg.example.levantee.utils.exception.PriceChangedException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,13 +38,16 @@ class ShipmentServiceTest {
 
     @Mock OrderRepository orderRepository;
     @Mock ShipmentRepository shipmentRepository;
-    @Mock ShippingStrategyFactory strategyFactory;
-    @Mock ShipmentPriceCacheService priceCacheService;
+    @Mock
+    ShippingStrategyFactory strategyFactory;
+    @Mock
+    ShipmentPriceCacheService priceCacheService;
     @Mock CdekService cdekService;
     @Mock CdekClient cdekClient;
     @Mock CdekProperties cdekProperties;
 
-    @InjectMocks ShipmentService service;
+    @InjectMocks
+    ShipmentService service;
 
     private static final Long ORDER_ID = 1L;
     private static final String TARIFF_ID = "CDEK:136:270";

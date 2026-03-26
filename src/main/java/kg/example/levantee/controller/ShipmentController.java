@@ -6,7 +6,7 @@ import kg.example.levantee.dto.shipmentDto.ShipmentCreateResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentRequest;
 import kg.example.levantee.dto.shipmentDto.ShipmentResponse;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
-import kg.example.levantee.service.shipment.ShipmentService;
+import kg.example.levantee.service.shipment.service.ShipmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;

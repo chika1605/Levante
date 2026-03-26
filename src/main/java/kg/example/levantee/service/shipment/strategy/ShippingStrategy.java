@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment;
+package kg.example.levantee.service.shipment.strategy;
 
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;

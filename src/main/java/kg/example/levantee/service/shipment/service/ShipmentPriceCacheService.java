@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment;
+package kg.example.levantee.service.shipment.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

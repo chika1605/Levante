@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment;
+package kg.example.levantee.service.shipment.service;
 
 import jakarta.transaction.Transactional;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
@@ -15,6 +15,7 @@ import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ShipmentRepository;
+import kg.example.levantee.service.shipment.factory.ShippingStrategyFactory;
 import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.service.CdekService;
