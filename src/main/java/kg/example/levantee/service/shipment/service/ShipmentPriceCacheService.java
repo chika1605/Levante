@@ -56,7 +56,6 @@ public class ShipmentPriceCacheService {
         private boolean insuranceEnabled;
         private int tariffCode;
 
-        public Entry() {}
 
         public Entry(double deliveryPrice, double insurancePrice, double totalPrice,
                      double declaredValue, boolean insuranceEnabled, int tariffCode) {

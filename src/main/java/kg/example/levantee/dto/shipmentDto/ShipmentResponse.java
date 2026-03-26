@@ -22,4 +22,7 @@ public class ShipmentResponse {
 
     @JsonProperty("insurance_enabled")
     private boolean insuranceEnabled;
+
+    @JsonProperty("grand_total")
+    private double grandTotal;
 }

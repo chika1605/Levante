@@ -11,4 +11,5 @@ public class ShipmentRequest {
     private String recipientPhone;
     private String recipientEmail;
     private String deliveryAddress;
+    private String deliveryPoint;
 }

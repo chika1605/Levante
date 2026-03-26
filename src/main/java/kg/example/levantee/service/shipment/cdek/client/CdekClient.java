@@ -2,7 +2,6 @@ package kg.example.levantee.service.shipment.cdek.client;
 
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.model.CdekCity;
-import kg.example.levantee.service.shipment.cdek.model.CdekDeliveryPoint;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiRequest;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffListResponse;
@@ -135,19 +134,6 @@ public class CdekClient {
     }
 
 
-    public List<CdekDeliveryPoint> getDeliveryPoints(int cityCode) {
-        CdekDeliveryPoint[] response = withRetry("getDeliveryPoints", () ->
-                restTemplate.exchange(
-                        properties.getUrl() + "/deliverypoints?city_code=" + cityCode,
-                        HttpMethod.GET,
-                        new HttpEntity<>(authHeaders()),
-                        CdekDeliveryPoint[].class).getBody());
-
-        if (response == null) throw new IllegalStateException("CDEK не вернул список ПВЗ");
-        return Arrays.asList(response);
-    }
-
-
     public List<CdekCity> searchCities(String name) {
         CdekCity[] response = withRetry("searchCities", () ->
                 restTemplate.exchange(
@@ -200,43 +186,6 @@ public class CdekClient {
         if (response == null) throw new IllegalStateException("CDEK не вернул статус для uuid=" + uuid);
         return response;
     }
-
-    public void cancelOrder(String uuid) {
-        log.info("Отмена заказа CDEK uuid={}", uuid);
-        withRetry("cancelOrder", () -> {
-            restTemplate.exchange(
-                    properties.getUrl() + "/orders/" + uuid,
-                    HttpMethod.DELETE,
-                    new HttpEntity<>(authHeaders()),
-                    Void.class);
-            return null;
-        });
-    }
-
-    public CdekOrderApiResponse refuseOrder(String uuid) {
-        log.info("Регистрация отказа от заказа CDEK uuid={}", uuid);
-        CdekOrderApiResponse response = withRetry("refuseOrder", () ->
-                restTemplate.postForObject(
-                        properties.getUrl() + "/orders/" + uuid + "/refusal",
-                        new HttpEntity<>(authJsonHeaders()),
-                        CdekOrderApiResponse.class));
-        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на отказ");
-        return response;
-    }
-
-    public CdekOrderApiResponse clientReturn(String uuid, int tariffCode) {
-        log.info("Клиентский возврат CDEK uuid={}, тариф={}", uuid, tariffCode);
-        var body = new java.util.HashMap<String, Integer>();
-        body.put("tariff_code", tariffCode);
-        CdekOrderApiResponse response = withRetry("clientReturn", () ->
-                restTemplate.postForObject(
-                        properties.getUrl() + "/orders/" + uuid + "/clientReturn",
-                        new HttpEntity<>(body, authJsonHeaders()),
-                        CdekOrderApiResponse.class));
-        if (response == null) throw new IllegalStateException("CDEK не вернул ответ на возврат");
-        return response;
-    }
-
 
     private List<CdekTariffRequest.Package> buildTariffPackages(List<ShipmentPackage> items) {
         return items.stream()

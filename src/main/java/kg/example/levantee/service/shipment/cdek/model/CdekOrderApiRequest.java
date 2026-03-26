@@ -17,6 +17,9 @@ public class CdekOrderApiRequest {
     @JsonProperty("tariff_code")
     private int tariffCode;
 
+    @JsonProperty("delivery_point")
+    private String deliveryPoint;
+
     @JsonProperty("from_location")
     private Location fromLocation;
 
@@ -41,10 +44,6 @@ public class CdekOrderApiRequest {
 
         @JsonProperty("postal_code")
         private String postalCode;
-
-        public static Location ofCity(int cityCode) {
-            return Location.builder().code(cityCode).build();
-        }
 
         public static Location ofCityAndAddress(int cityCode, String address) {
             return Location.builder().code(cityCode).address(address).build();

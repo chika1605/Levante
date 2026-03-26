@@ -30,21 +30,21 @@ public class ShipmentMapper {
                 .insurancePrice(insurancePrice)
                 .calculatedPrice(totalPrice)
                 .declaredValue(declaredValue)
-                .cdekUuid(cdekResponse.getUuid())
-                .cdekRequestStatus(cdekResponse.getStatus())
+                .cdekUuid(cdekResponse != null ? cdekResponse.getUuid() : null)
+                .cdekRequestStatus(cdekResponse != null ? cdekResponse.getStatus() : null)
                 .cdekPollAttempts(0)
                 .build();
     }
 
-    public ShipmentCreateResponse toCreateResponse(Shipment shipment, CdekCreateOrderResponse cdekResponse, double totalPrice) {
+    public ShipmentCreateResponse toCreateResponse(Shipment shipment, String cdekUuid, String cdekStatus, double totalPrice) {
         return new ShipmentCreateResponse(
                 shipment.getId(),
                 shipment.getOrder().getId(),
                 shipment.getCarrier(),
                 shipment.getTariffId(),
                 shipment.getOrder().getStatus(),
-                cdekResponse.getUuid(),
-                cdekResponse.getStatus(),
+                cdekUuid,
+                cdekStatus,
                 totalPrice
         );
     }
@@ -52,9 +52,7 @@ public class ShipmentMapper {
     public CdekCreateOrderRequest toCdekRequest(ShipmentRequest request, List<ShipmentPackage> packages,
                                                 int tariffCode, int toCityCode,
                                                 double insuranceAmount, int fromCityCode) {
-        boolean isPvz = request.getDeliveryAddress() != null
-                && !request.getDeliveryAddress().isBlank()
-                && !request.getDeliveryAddress().contains(" ");
+        boolean isPvz = request.getDeliveryPoint() != null && !request.getDeliveryPoint().isBlank();
 
         CdekCreateOrderRequest cdekRequest = new CdekCreateOrderRequest();
         cdekRequest.setOrderId(request.getOrderId());
@@ -68,7 +66,7 @@ public class ShipmentMapper {
         cdekRequest.setInsuranceAmount(insuranceAmount > 0 ? insuranceAmount : null);
 
         if (isPvz) {
-            cdekRequest.setDeliveryPoint(request.getDeliveryAddress());
+            cdekRequest.setDeliveryPoint(request.getDeliveryPoint());
         } else {
             cdekRequest.setToAddress(request.getDeliveryAddress());
         }

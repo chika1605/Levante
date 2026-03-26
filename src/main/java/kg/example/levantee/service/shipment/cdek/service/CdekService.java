@@ -1,12 +1,8 @@
 package kg.example.levantee.service.shipment.cdek.service;
 
 import kg.example.levantee.dto.CityDto;
-import kg.example.levantee.dto.cdekDto.CdekCalculateRequest;
-import kg.example.levantee.dto.cdekDto.CdekCalculateResponse;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderResponse;
-import kg.example.levantee.dto.cdekDto.DeliveryPointDto;
-import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
 import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
@@ -14,7 +10,6 @@ import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiRequest;
 import kg.example.levantee.service.shipment.cdek.model.CdekOrderApiResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffListResponse;
 import kg.example.levantee.service.shipment.cdek.model.CdekTariffRequest;
-import kg.example.levantee.service.shipment.cdek.model.CdekTariffResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -56,8 +51,9 @@ public class CdekService {
     public CdekCreateOrderResponse createOrder(CdekCreateOrderRequest request) {
         boolean isWarehouse = request.getDeliveryPoint() != null && !request.getDeliveryPoint().isBlank();
 
+        String deliveryPoint = isWarehouse ? request.getDeliveryPoint() : null;
         CdekOrderApiRequest.Location toLocation = isWarehouse
-                ? CdekOrderApiRequest.Location.ofDeliveryPoint(request.getDeliveryPoint())
+                ? null
                 : CdekOrderApiRequest.Location.ofCityAndAddress(request.getToCityCode(), request.getToAddress());
 
         int fromCityCode = request.getFromCityCode() > 0 ? request.getFromCityCode() : properties.getFromCityCode();
@@ -100,6 +96,7 @@ public class CdekService {
         CdekOrderApiRequest orderRequest = CdekOrderApiRequest.builder()
                 .type(2)
                 .tariffCode(request.getTariffCode())
+                .deliveryPoint(deliveryPoint)
                 .fromLocation(CdekOrderApiRequest.Location.ofCityAndAddress(fromCityCode, properties.getSenderAddress()))
                 .toLocation(toLocation)
                 .sender(sender)

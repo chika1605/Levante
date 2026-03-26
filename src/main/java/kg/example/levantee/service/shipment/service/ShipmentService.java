@@ -38,7 +38,6 @@ public class ShipmentService {
     private final ShippingStrategyFactory shippingStrategyFactory;
     private final ShipmentPriceCacheService priceCacheService;
     private final CdekService cdekService;
-    private final CdekClient cdekClient;
     private final CdekProperties cdekProperties;
     private final ShipmentMapper shipmentMapper;
 
@@ -66,17 +65,19 @@ public class ShipmentService {
         if (!orderRepository.existsById(orderId)) throw new NotFoundException("Заказ не найден");
 
         Double totalAmount = orderRepository.findTotalAmountByOrderId(orderId);
-        if (totalAmount == null || totalAmount <= 0) throw new IllegalArgumentException("Сумма заказа должна быть больше 0");
+        if (totalAmount == null || totalAmount <= 0)
+            throw new IllegalArgumentException("Сумма заказа должна быть больше 0");
 
         List<ShipmentPackage> packages = getPackages(orderId);
-        double deliveryPrice  = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
+        double deliveryPrice = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
         double insurancePrice = insuranceEnabled ? Math.round(totalAmount * 0.01 * 100.0) / 100.0 : 0.0;
-        double totalPrice     = deliveryPrice + insurancePrice;
+        double totalPrice = deliveryPrice + insurancePrice;
 
         priceCacheService.save(orderId, deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled, tariffCode);
         log.info("Цена рассчитана orderId={}: доставка={}, страховка={}, итого={}", orderId, deliveryPrice, insurancePrice, totalPrice);
 
-        return new ShipmentResponse(deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled);
+        double grandTotal = totalAmount != null ? totalAmount + totalPrice : totalPrice;
+        return new ShipmentResponse(deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled, grandTotal);
     }
 
 
@@ -96,23 +97,33 @@ public class ShipmentService {
 
         List<ShipmentPackage> packages = getPackages(request.getOrderId());
 
-        double freshDelivery  = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
+        double freshDelivery = shippingStrategyFactory.get(carrier).calculate(packages, new ShipmentParams(0, toCityCode, tariffCode));
         ShipmentPriceCacheService.Entry cached = priceCacheService.get(request.getOrderId());
         boolean insuranceEnabled = cached != null && cached.isInsuranceEnabled();
-        Double totalAmount    = orderRepository.findTotalAmountByOrderId(request.getOrderId());
-        double declaredValue  = (insuranceEnabled && totalAmount != null) ? totalAmount : 0.0;
+        Double totalAmount = orderRepository.findTotalAmountByOrderId(request.getOrderId());
+        double declaredValue = (insuranceEnabled && totalAmount != null) ? totalAmount : 0.0;
         double freshInsurance = insuranceEnabled ? Math.round(declaredValue * 0.01 * 100.0) / 100.0 : 0.0;
-        double freshTotal     = freshDelivery + freshInsurance;
+        double freshTotal = freshDelivery + freshInsurance;
 
         if (cached != null && Math.abs(cached.getTotalPrice() - freshTotal) > 0.01) {
             priceCacheService.save(request.getOrderId(), freshDelivery, freshInsurance, freshTotal, declaredValue, insuranceEnabled, tariffCode);
             throw new PriceChangedException(cached.getTotalPrice(), freshTotal);
         }
 
-        CdekCreateOrderRequest cdekRequest = shipmentMapper.toCdekRequest(request, packages, tariffCode, toCityCode, freshInsurance, cdekProperties.getFromCityCode());
-        CdekCreateOrderResponse cdekResponse = cdekService.createOrder(cdekRequest);
+        Shipment shipment;
+        String cdekUuid = null;
+        String cdekStatus = null;
 
-        Shipment shipment = shipmentMapper.toEntity(order, request, carrier, tariffCode, freshDelivery, freshInsurance, freshTotal, declaredValue, cdekResponse);
+        if ("CDEK".equals(carrier)) {
+            CdekCreateOrderRequest cdekRequest = shipmentMapper.toCdekRequest(request, packages, tariffCode, toCityCode, freshInsurance, cdekProperties.getFromCityCode());
+            CdekCreateOrderResponse cdekResponse = cdekService.createOrder(cdekRequest);
+            cdekUuid = cdekResponse.getUuid();
+            cdekStatus = cdekResponse.getStatus();
+            shipment = shipmentMapper.toEntity(order, request, carrier, tariffCode, freshDelivery, freshInsurance, freshTotal, declaredValue, cdekResponse);
+        } else {
+            shipment = shipmentMapper.toEntity(order, request, carrier, tariffCode, freshDelivery, freshInsurance, freshTotal, declaredValue, null);
+        }
+
         shipmentRepository.save(shipment);
 
         order.setStatus(OrderStatus.PENDING);
@@ -120,31 +131,15 @@ public class ShipmentService {
 
         priceCacheService.delete(request.getOrderId());
 
-        log.info("Доставка оформлена: shipmentId={}, cdekUuid={}, price={}", shipment.getId(), cdekResponse.getUuid(), freshTotal);
+        log.info("Доставка оформлена: shipmentId={}, carrier={}, cdekUuid={}, price={}", shipment.getId(), carrier, cdekUuid, freshTotal);
 
-        return shipmentMapper.toCreateResponse(shipment, cdekResponse, freshTotal);
-    }
-
-    @Transactional
-    public void cancelShipment(String cdekUuid) {
-        Shipment shipment = shipmentRepository.findByCdekUuid(cdekUuid)
-                .orElseThrow(() -> new NotFoundException("Доставка не найдена: " + cdekUuid));
-
-        if (!"Создан".equals(shipment.getCdekStatus())) {
-            throw new IllegalArgumentException("Отмена возможна только для статуса 'Создан'. Текущий: " + shipment.getCdekStatus());
-        }
-
-        cdekClient.cancelOrder(cdekUuid);
-
-        shipment.getOrder().setStatus(OrderStatus.CANCELLED);
-        orderRepository.save(shipment.getOrder());
-
-        log.info("Заказ cdekUuid={} отменён", cdekUuid);
+        return shipmentMapper.toCreateResponse(shipment, cdekUuid, cdekStatus, freshTotal);
     }
 
     private String[] parseTariffId(String tariffId) {
         String[] parts = tariffId.split(":");
-        if (parts.length != 3) throw new IllegalArgumentException("Неверный формат tariffId. Ожидается: CARRIER:tariffCode:toCityCode");
+        if (parts.length != 3)
+            throw new IllegalArgumentException("Неверный формат tariffId. Ожидается: CARRIER:tariffCode:toCityCode");
         return parts;
     }
 
