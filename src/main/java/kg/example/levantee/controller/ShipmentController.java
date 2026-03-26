@@ -6,7 +6,7 @@ import kg.example.levantee.dto.shipmentDto.ShipmentCreateResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentRequest;
 import kg.example.levantee.dto.shipmentDto.ShipmentResponse;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
-import kg.example.levantee.service.shipment.service.ShipmentService;
+import kg.example.levantee.service.shipment.ShipmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -34,8 +34,9 @@ public class ShipmentController {
 
     @GetMapping("/tariffs")
     public ResponseEntity<List<TariffInfo>> getTariffs(
-            @RequestParam @Positive(message = "Укажите код города получения") int toCityCode) {
-        return ResponseEntity.ok(shipmentService.getTariffs(toCityCode));
+            @RequestParam @Positive(message = "Укажите код города получения") int toCityCode,
+            @RequestParam(required = false) Long orderId) {
+        return ResponseEntity.ok(shipmentService.getTariffs(toCityCode, orderId));
     }
 
     @GetMapping("/calculate")

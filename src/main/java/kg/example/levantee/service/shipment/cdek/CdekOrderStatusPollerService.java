@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.cdek.service;
+package kg.example.levantee.service.shipment.cdek;
 
 import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.repository.ShipmentRepository;
@@ -16,12 +16,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CdekOrderStatusPollerService {
 
-    private static final int MAX_POLL_ATTEMPTS = 10;
+    private static final int MAX_POLL_ATTEMPTS = 30;
 
     private final CdekClient cdekClient;
     private final ShipmentRepository shipmentRepository;
 
-    @Scheduled(fixedDelay = 10_000)
+    @Scheduled(fixedDelay = 30_000)
     public void pollAcceptedOrders() {
         List<Shipment> pending = shipmentRepository.findAllByCdekRequestStatus("ACCEPTED");
 
@@ -58,7 +58,7 @@ public class CdekOrderStatusPollerService {
                             shipment.getId(), shipment.getCdekUuid());
 
                 } else {
-                    log.debug("Shipment #{} cdekUuid={}: статус всё ещё {}, попытка {}/{}",
+                    log.info("Shipment #{} cdekUuid={}: статус всё ещё {}, попытка {}/{}",
                             shipment.getId(), shipment.getCdekUuid(), newState,
                             shipment.getCdekPollAttempts(), MAX_POLL_ATTEMPTS);
                 }

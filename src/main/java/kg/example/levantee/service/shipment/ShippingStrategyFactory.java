@@ -1,6 +1,5 @@
-package kg.example.levantee.service.shipment.factory;
+package kg.example.levantee.service.shipment;
 
-import kg.example.levantee.service.shipment.strategy.ShippingStrategy;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

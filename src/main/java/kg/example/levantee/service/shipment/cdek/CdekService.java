@@ -1,8 +1,9 @@
-package kg.example.levantee.service.shipment.cdek.service;
+package kg.example.levantee.service.shipment.cdek;
 
 import kg.example.levantee.dto.CityDto;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderResponse;
+import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
 import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
@@ -26,8 +27,8 @@ public class CdekService {
     private final CdekProperties properties;
 
 
-    public List<TariffInfo> getSupportedTariffs(int toCityCode) {
-        CdekTariffListResponse response = cdekClient.getTariffList(toCityCode);
+    public List<TariffInfo> getSupportedTariffs(int toCityCode, List<ShipmentPackage> packages) {
+        CdekTariffListResponse response = cdekClient.getTariffList(toCityCode, packages);
         return response.getTariffCodes().stream()
                 .map(t -> new TariffInfo(
                         "CDEK:" + t.getTariffCode() + ":" + toCityCode,

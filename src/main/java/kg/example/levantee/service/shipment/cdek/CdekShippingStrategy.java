@@ -1,11 +1,10 @@
-package kg.example.levantee.service.shipment.cdek.strategy;
+package kg.example.levantee.service.shipment.cdek;
 
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
-import kg.example.levantee.service.shipment.strategy.ShippingStrategy;
+import kg.example.levantee.service.shipment.ShippingStrategy;
 import kg.example.levantee.service.shipment.cdek.client.CdekClient;
-import kg.example.levantee.service.shipment.cdek.service.CdekService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +28,7 @@ public class CdekShippingStrategy implements ShippingStrategy {
     }
 
     @Override
-    public List<TariffInfo> getTariffs(int toCityCode) {
-        return cdekService.getSupportedTariffs(toCityCode);
+    public List<TariffInfo> getTariffs(int toCityCode, List<ShipmentPackage> packages) {
+        return cdekService.getSupportedTariffs(toCityCode, packages);
     }
 }

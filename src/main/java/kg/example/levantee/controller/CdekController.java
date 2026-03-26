@@ -1,7 +1,7 @@
 package kg.example.levantee.controller;
 
 import kg.example.levantee.dto.CityDto;
-import kg.example.levantee.service.shipment.cdek.service.CdekService;
+import kg.example.levantee.service.shipment.cdek.CdekService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

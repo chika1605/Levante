@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.service;
+package kg.example.levantee.service.shipment;
 
 import jakarta.transaction.Transactional;
 import kg.example.levantee.dto.cdekDto.CdekCreateOrderRequest;
@@ -15,10 +15,8 @@ import kg.example.levantee.model.entity.shipment.Shipment;
 import kg.example.levantee.model.enums.order.OrderStatus;
 import kg.example.levantee.repository.OrderRepository;
 import kg.example.levantee.repository.ShipmentRepository;
-import kg.example.levantee.service.shipment.factory.ShippingStrategyFactory;
-import kg.example.levantee.service.shipment.cdek.client.CdekClient;
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
-import kg.example.levantee.service.shipment.cdek.service.CdekService;
+import kg.example.levantee.service.shipment.cdek.CdekService;
 import kg.example.levantee.utils.exception.NotFoundException;
 import kg.example.levantee.utils.exception.PriceChangedException;
 import lombok.RequiredArgsConstructor;
@@ -42,11 +40,12 @@ public class ShipmentService {
     private final ShipmentMapper shipmentMapper;
 
 
-    public List<TariffInfo> getTariffs(int toCityCode) {
+    public List<TariffInfo> getTariffs(int toCityCode, Long orderId) {
+        List<ShipmentPackage> packages = orderId != null ? getPackages(orderId) : List.of();
         return shippingStrategyFactory.getAll().stream()
                 .flatMap(strategy -> {
                     try {
-                        return strategy.getTariffs(toCityCode).stream();
+                        return strategy.getTariffs(toCityCode, packages).stream();
                     } catch (Exception e) {
                         log.warn("Не удалось получить тарифы от {}: {}", strategy.getCarrierName(), e.getMessage());
                         return Stream.empty();
@@ -76,7 +75,7 @@ public class ShipmentService {
         priceCacheService.save(orderId, deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled, tariffCode);
         log.info("Цена рассчитана orderId={}: доставка={}, страховка={}, итого={}", orderId, deliveryPrice, insurancePrice, totalPrice);
 
-        double grandTotal = totalAmount != null ? totalAmount + totalPrice : totalPrice;
+        double grandTotal = Math.round((totalAmount != null ? totalAmount + totalPrice : totalPrice) * 100.0) / 100.0;
         return new ShipmentResponse(deliveryPrice, insurancePrice, totalPrice, totalAmount, insuranceEnabled, grandTotal);
     }
 

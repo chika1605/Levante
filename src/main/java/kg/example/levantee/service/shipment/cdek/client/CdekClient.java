@@ -10,7 +10,7 @@ import kg.example.levantee.service.shipment.cdek.model.CdekTariffResponse;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 
-import kg.example.levantee.service.shipment.cdek.service.CdekAuthService;
+import kg.example.levantee.service.shipment.cdek.CdekAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -114,11 +114,15 @@ public class CdekClient {
     }
 
 
-    public CdekTariffListResponse getTariffList(int toCityCode) {
+    public CdekTariffListResponse getTariffList(int toCityCode, List<ShipmentPackage> packages) {
+        List<CdekTariffRequest.Package> pkgs = (packages != null && !packages.isEmpty())
+                ? buildTariffPackages(packages)
+                : List.of(new CdekTariffRequest.Package(1000, 10, 10, 10));
+
         CdekTariffRequest request = CdekTariffRequest.builder()
                 .fromLocation(new CdekTariffRequest.Location(properties.getFromCityCode()))
                 .toLocation(new CdekTariffRequest.Location(toCityCode))
-                .packages(List.of(new CdekTariffRequest.Package(1000, 10, 10, 10)))
+                .packages(pkgs)
                 .build();
 
         CdekTariffListResponse response = withRetry("getTariffList", () ->

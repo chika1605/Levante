@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.cdek.service;
+package kg.example.levantee.service.shipment.cdek;
 
 import kg.example.levantee.service.shipment.cdek.model.CdekProperties;
 import kg.example.levantee.service.shipment.cdek.model.CdekTokenResponse;

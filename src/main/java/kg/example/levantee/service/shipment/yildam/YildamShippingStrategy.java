@@ -3,7 +3,7 @@ package kg.example.levantee.service.shipment.yildam;
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
 import kg.example.levantee.dto.shipmentDto.TariffInfo;
-import kg.example.levantee.service.shipment.strategy.ShippingStrategy;
+import kg.example.levantee.service.shipment.ShippingStrategy;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +34,15 @@ public class YildamShippingStrategy implements ShippingStrategy {
     }
 
     @Override
-    public List<TariffInfo> getTariffs(int toCityCode) {
-        return yildamService.getTariffs(toCityCode);
+    public List<TariffInfo> getTariffs(int toCityCode, List<ShipmentPackage> packages) {
+        List<TariffInfo> tariffs = yildamService.getTariffs(toCityCode);
+        if (packages == null || packages.isEmpty()) return tariffs;
+
+        ShipmentParams params = new ShipmentParams(0, toCityCode, 0);
+        double realPrice = calculate(packages, params);
+        return tariffs.stream()
+                .map(t -> new TariffInfo(t.getId(), t.getCarrierName(), t.getCode(), t.getName(),
+                        t.getDescription(), t.getPeriodMin(), t.getPeriodMax(), realPrice, t.getCurrency()))
+                .toList();
     }
 }

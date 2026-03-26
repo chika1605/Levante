@@ -1,4 +1,4 @@
-package kg.example.levantee.service.shipment.strategy;
+package kg.example.levantee.service.shipment;
 
 import kg.example.levantee.dto.shipmentDto.ShipmentPackage;
 import kg.example.levantee.dto.shipmentDto.ShipmentParams;
@@ -9,5 +9,5 @@ import java.util.List;
 public interface ShippingStrategy {
     String getCarrierName();
     double calculate(List<ShipmentPackage> packages, ShipmentParams params);
-    List<TariffInfo> getTariffs(int toCityCode);
+    List<TariffInfo> getTariffs(int toCityCode, List<ShipmentPackage> packages);
 }
